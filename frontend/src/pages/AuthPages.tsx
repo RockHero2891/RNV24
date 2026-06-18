@@ -1,7 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+
+// ── Shared ────────────────────────────────────────────────────────────────────
+function Logo() {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 shadow-sm">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 4h10M3 8h7M3 12h5" stroke="white" strokeWidth="1.75" strokeLinecap="round"/>
+        </svg>
+      </div>
+      <span className="text-sm font-bold tracking-tight text-surface-900">RNV24</span>
+    </div>
+  );
+}
 
 // ── Login / Registro ──────────────────────────────────────────────────────────
 export function LoginPage() {
@@ -30,47 +44,103 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="card w-full max-w-md p-8">
-        <div className="mb-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">RNV24</p>
-          <h1 className="mt-2 text-xl font-bold text-surface-900">
-            Test Certificación Full Stack Javascript
-          </h1>
-          <p className="mt-2 text-sm text-surface-600">
-            Simulador de examen para práctica del equipo
+    <div className="flex min-h-screen">
+      {/* Panel izquierdo — identidad */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-brand-950 px-12 py-10">
+        <Logo />
+        <div className="animate-fade-in">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-400">
+            Certificación Full Stack
           </p>
-          <p className="mt-3 text-xs text-surface-400">v1.0.0 &copy; 2026 RNV24</p>
+          <h1 className="text-4xl font-bold leading-tight text-white">
+            Prepárate para el<br/>certamen real.
+          </h1>
+          <p className="mt-5 max-w-sm text-base leading-relaxed text-surface-400">
+            7 secciones · 65 preguntas · temporizadores exactos · verificación de código.
+            El mismo ambiente del examen oficial.
+          </p>
+          <div className="mt-10 grid grid-cols-2 gap-4">
+            {[
+              { n: '65', label: 'Preguntas' },
+              { n: '7',  label: 'Secciones' },
+              { n: '15h', label: 'Ventana total' },
+              { n: '×10', label: 'Intentos por ejercicio' },
+            ].map(({ n, label }) => (
+              <div key={label} className="rounded-lg border border-surface-700 bg-surface-800/40 px-4 py-3">
+                <p className="text-2xl font-bold text-white">{n}</p>
+                <p className="text-xs text-surface-400">{label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === 'register' && (
-            <div>
-              <label className="label" htmlFor="name">Nombre</label>
-              <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-          )}
-          <div>
-            <label className="label" htmlFor="email">Email</label>
-            <input id="email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div>
-            <label className="label" htmlFor="password">Contraseña</label>
-            <input id="password" type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-          </div>
-          {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Procesando...' : mode === 'login' ? 'Iniciar sesión' : 'Registrarse'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-surface-600">
-          {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
-          <button type="button" className="font-semibold text-brand-600 hover:underline"
-            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
-            {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
-          </button>
+        <p className="text-xs text-surface-600">
+          v{__APP_VERSION__} · © {new Date().getFullYear()} RNV24
         </p>
+      </div>
+
+      {/* Panel derecho — formulario */}
+      <div className="flex flex-1 items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm animate-fade-in">
+          {/* Logo móvil */}
+          <div className="mb-8 lg:hidden">
+            <Logo />
+          </div>
+
+          <h2 className="text-2xl font-bold text-surface-900">
+            {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
+          </h2>
+          <p className="mt-1 text-sm text-surface-500">
+            {mode === 'login'
+              ? 'Ingresa para continuar tu simulacro'
+              : 'Regístrate para comenzar'}
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {mode === 'register' && (
+              <div className="animate-slide-in">
+                <label className="label" htmlFor="name">Nombre completo</label>
+                <input id="name" className="input" placeholder="Tu nombre"
+                  value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+            )}
+            <div>
+              <label className="label" htmlFor="email">Email</label>
+              <input id="email" type="email" className="input" placeholder="tu@email.com"
+                value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+            <div>
+              <label className="label" htmlFor="password">Contraseña</label>
+              <input id="password" type="password" className="input" placeholder="••••••"
+                value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+            </div>
+
+            {error && (
+              <div className="alert alert-error animate-slide-in">{error}</div>
+            )}
+
+            <button type="submit" className="btn-primary w-full py-2.5" disabled={loading}>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Procesando...
+                </span>
+              ) : mode === 'login' ? 'Entrar' : 'Registrarme'}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-surface-500">
+            {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
+            <button type="button" className="font-semibold text-brand-600 hover:underline"
+              onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>
+              {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
+            </button>
+          </p>
+
+          {/* Versión en móvil */}
+          <p className="mt-10 text-center text-xs text-surface-400 lg:hidden">
+            v{__APP_VERSION__} · © {new Date().getFullYear()} RNV24
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -83,113 +153,172 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [proctoringAccepted, setProctoringAccepted] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const startExam = async () => {
-    if (!proctoringAccepted) { setError('Debes aceptar las condiciones de supervisión simulada.'); return; }
-    setLoading(true);
-    setError('');
-    try { navigate('/exam'); } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo iniciar el examen');
-    } finally { setLoading(false); }
+    if (!proctoringAccepted) { setError('Acepta las condiciones de supervisión para continuar.'); return; }
+    setLoading(true); setError('');
+    try { navigate('/exam'); }
+    catch (err) { setError(err instanceof Error ? err.message : 'No se pudo iniciar el examen'); }
+    finally { setLoading(false); }
   };
 
   const handleDeleteAccount = async () => {
     setDeleting(true);
-    try {
-      await api.deleteMyAccount();
-      logout();
-      navigate('/login');
-    } catch {
-      setError('No se pudo eliminar la cuenta. Intenta de nuevo.');
-      setShowDeleteConfirm(false);
-    } finally { setDeleting(false); }
+    try { await api.deleteMyAccount(); logout(); navigate('/login'); }
+    catch { setError('No se pudo eliminar la cuenta.'); setShowDelete(false); }
+    finally { setDeleting(false); }
   };
 
+  const sections = [
+    { id: 1, title: 'HTML / CSS',          mins: 35,  q: 3  },
+    { id: 2, title: 'JavaScript Básico',    mins: 40,  q: 3  },
+    { id: 3, title: 'JavaScript Avanzado',  mins: 90,  q: 16 },
+    { id: 4, title: 'SQL',                  mins: 60,  q: 10 },
+    { id: 5, title: 'Modelo ER',            mins: 20,  q: 4  },
+    { id: 6, title: 'Express / Node.js',    mins: 45,  q: 13 },
+    { id: 7, title: 'ORM / REST / JWT',     mins: 45,  q: 16 },
+  ];
+
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-surface-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">RNV24</p>
-            <h1 className="text-lg font-bold text-surface-900">Panel de certificación</h1>
-          </div>
+    <div className="min-h-screen bg-surface-50">
+      {/* Header */}
+      <header className="sticky top-0 z-10 border-b border-surface-200 bg-white/80 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <span className="text-sm text-surface-600">{user?.name}</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 4h10M3 8h7M3 12h5" stroke="white" strokeWidth="1.75" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">RNV24</p>
+              <p className="text-xs text-surface-500 leading-none">v{__APP_VERSION__}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:block text-sm text-surface-600 font-medium">{user?.name}</span>
             {user?.isAdmin && (
-              <button type="button" className="btn-secondary text-sm" onClick={() => navigate('/admin')}>
-                Panel Admin
+              <button type="button" className="btn-secondary text-xs px-3 py-1.5"
+                onClick={() => navigate('/admin')}>
+                ⚙ Admin
               </button>
             )}
-            <button type="button" className="btn-secondary" onClick={() => { logout(); navigate('/login'); }}>
-              Cerrar sesión
+            <button type="button" className="btn-ghost text-xs px-3 py-1.5"
+              onClick={() => { logout(); navigate('/login'); }}>
+              Salir
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <div className="card p-8">
-          <h2 className="text-2xl font-bold text-surface-900">
-            Test RNV24 Certificación - Full Stack Javascript
-          </h2>
-          <p className="mt-3 max-w-2xl text-surface-600">
-            Simulador del ambiente estricto de certificación: 7 secciones, temporizadores por sección y
-            ejercicio, ventana total de 15 horas, supervisión simulada y verificación heurística de código.
-          </p>
-
-          <ul className="mt-6 grid gap-2 text-sm text-surface-700 sm:grid-cols-2">
-            <li>65 preguntas en orden exacto del certamen</li>
-            <li>7 secciones con pausas opcionales</li>
-            <li>Ventana total de 15 horas</li>
-            <li>Hasta 10 intentos por ejercicio de desarrollo</li>
-            <li>Detección de cambio de ventana</li>
-            <li>Copiar/pegar bloqueado en código</li>
-          </ul>
-
-          <div className="mt-6 rounded-md border border-surface-200 bg-surface-50 p-4">
-            <label className="flex cursor-pointer items-start gap-3 text-sm text-surface-700">
-              <input type="checkbox" className="mt-1" checked={proctoringAccepted}
-                onChange={(e) => setProctoringAccepted(e.target.checked)} />
-              <span>
-                Acepto el entorno de supervisión <strong>simulado</strong> (cámara, micrófono y
-                pantalla compartida sin captura real, detección de foco y pantalla completa recomendada).
-              </span>
-            </label>
+      <main className="mx-auto max-w-5xl px-4 py-10 animate-fade-in">
+        {/* Hero card */}
+        <div className="card overflow-hidden">
+          <div className="bg-brand-950 px-8 py-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-400">Simulador oficial</p>
+            <h1 className="mt-1 text-2xl font-bold text-white">
+              Test RNV24 Certificación · Full Stack Javascript
+            </h1>
+            <p className="mt-2 text-sm text-surface-400 max-w-xl">
+              Ambiente estricto con temporizadores reales, supervisión simulada y verificación heurística de código.
+            </p>
           </div>
 
-          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+          <div className="px-8 py-6">
+            {/* Secciones */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              {[
+                { value: '65', label: 'Preguntas' },
+                { value: '7',  label: 'Secciones' },
+                { value: '15 h', label: 'Ventana total' },
+                { value: '×10', label: 'Intentos / ejercicio' },
+              ].map(({ value, label }) => (
+                <div key={label} className="rounded-lg bg-surface-50 border border-surface-200 px-4 py-3 text-center">
+                  <p className="text-xl font-bold text-brand-700">{value}</p>
+                  <p className="mt-0.5 text-xs text-surface-500">{label}</p>
+                </div>
+              ))}
+            </div>
 
-          <div className="mt-8">
-            <button type="button" className="btn-primary px-8 py-3" onClick={startExam} disabled={loading}>
-              {loading ? 'Cargando...' : 'Iniciar o continuar examen'}
-            </button>
+            {/* Tabla de secciones */}
+            <div className="overflow-hidden rounded-lg border border-surface-200 mb-6">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-surface-50 text-left text-xs font-semibold uppercase tracking-wide text-surface-500">
+                    <th className="px-4 py-2.5">#</th>
+                    <th className="px-4 py-2.5">Sección</th>
+                    <th className="px-4 py-2.5 text-center">Preguntas</th>
+                    <th className="px-4 py-2.5 text-right">Tiempo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-100">
+                  {sections.map((s) => (
+                    <tr key={s.id} className="hover:bg-surface-50 transition-colors">
+                      <td className="px-4 py-2.5 text-surface-400 font-mono text-xs">{String(s.id).padStart(2,'0')}</td>
+                      <td className="px-4 py-2.5 font-medium text-surface-800">{s.title}</td>
+                      <td className="px-4 py-2.5 text-center text-surface-600">{s.q}</td>
+                      <td className="px-4 py-2.5 text-right text-surface-600">{s.mins} min</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Supervisión */}
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-surface-200 bg-surface-50 p-4 transition-colors hover:bg-white">
+              <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand-600"
+                checked={proctoringAccepted}
+                onChange={(e) => { setProctoringAccepted(e.target.checked); setError(''); }} />
+              <span className="text-sm text-surface-700 leading-relaxed">
+                Acepto el entorno de <strong className="text-surface-900">supervisión simulada</strong> —
+                cámara, micrófono y pantalla compartida sin captura real.
+                Se registrará el cambio de ventana y se recomienda pantalla completa.
+              </span>
+            </label>
+
+            {error && <div className="alert alert-error mt-4">{error}</div>}
+
+            <div className="mt-6 flex items-center gap-3">
+              <button type="button" className="btn-primary px-6 py-2.5"
+                onClick={startExam} disabled={loading || !proctoringAccepted}>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin"/>
+                    Cargando...
+                  </span>
+                ) : 'Iniciar / continuar examen →'}
+              </button>
+            </div>
           </div>
         </div>
 
+        {/* Footer */}
         {!user?.isAdmin && (
-          <div className="mt-6 text-center">
-            {!showDeleteConfirm ? (
-              <button type="button" className="text-xs text-red-400 hover:text-red-600 hover:underline"
-                onClick={() => setShowDeleteConfirm(true)}>
+          <div className="mt-8 text-center">
+            {!showDelete ? (
+              <button type="button" className="text-xs text-surface-400 hover:text-danger-600 transition-colors"
+                onClick={() => setShowDelete(true)}>
                 Eliminar mi cuenta
               </button>
             ) : (
-              <div className="inline-flex items-center gap-3 rounded-md bg-red-50 px-4 py-2">
-                <span className="text-xs text-red-800">¿Confirmas? Se borrarán todos tus datos.</span>
-                <button type="button" className="text-xs font-semibold text-red-700 hover:underline"
+              <div className="inline-flex items-center gap-3 rounded-lg bg-danger-50 border border-danger-200 px-4 py-2.5">
+                <span className="text-xs text-danger-800">¿Confirmas? Se borrarán todos tus datos permanentemente.</span>
+                <button type="button" className="text-xs font-semibold text-danger-700 hover:underline"
                   disabled={deleting} onClick={handleDeleteAccount}>
                   {deleting ? 'Eliminando...' : 'Sí, eliminar'}
                 </button>
                 <button type="button" className="text-xs text-surface-500 hover:underline"
-                  onClick={() => setShowDeleteConfirm(false)}>
-                  Cancelar
-                </button>
+                  onClick={() => setShowDelete(false)}>Cancelar</button>
               </div>
             )}
           </div>
         )}
+
+        <p className="mt-6 text-center text-xs text-surface-400">
+          v{__APP_VERSION__} · © {new Date().getFullYear()} RNV24
+        </p>
       </main>
     </div>
   );
@@ -211,17 +340,38 @@ export function CompletePage() {
     }).catch(() => {});
   }, []);
 
+  const pct = summary?.percentage ?? 0;
+  const passed = pct >= 70;
+
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="card max-w-lg p-8 text-center">
-        <h1 className="text-2xl font-bold text-surface-900">Examen completado</h1>
-        <p className="mt-3 text-surface-600">Has finalizado las 7 secciones del simulador RNV24.</p>
-        {summary && (
-          <p className="mt-4 text-lg font-semibold text-brand-700">
-            {summary.correct} aciertos de {summary.totalQuestions} ({summary.percentage}%)
-          </p>
+    <div className="flex min-h-screen items-center justify-center bg-surface-50 px-4">
+      <div className="card max-w-lg w-full p-8 text-center animate-fade-in">
+        <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full text-2xl
+          ${passed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+          {passed ? '✓' : '○'}
+        </div>
+        <h1 className="text-2xl font-bold text-surface-900">Simulacro completado</h1>
+        <p className="mt-2 text-surface-500">Has finalizado las 7 secciones del test RNV24.</p>
+
+        {summary ? (
+          <div className="mt-6">
+            <p className="text-5xl font-bold text-brand-700">{pct}%</p>
+            <p className="mt-1 text-sm text-surface-500">
+              {summary.correct} aciertos de {summary.totalQuestions} preguntas
+            </p>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-surface-200">
+              <div className={`h-full rounded-full transition-all duration-700 ${passed ? 'bg-green-500' : 'bg-amber-500'}`}
+                style={{ width: `${pct}%` }} />
+            </div>
+            <p className={`mt-2 text-sm font-semibold ${passed ? 'text-green-700' : 'text-amber-700'}`}>
+              {passed ? '¡Por encima del umbral de aprobación!' : 'Por debajo del 70% — sigue practicando.'}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 skeleton h-20" />
         )}
-        <button type="button" className="btn-primary mt-8" onClick={() => navigate('/dashboard')}>
+
+        <button type="button" className="btn-primary mt-8 px-6" onClick={() => navigate('/dashboard')}>
           Volver al panel
         </button>
       </div>

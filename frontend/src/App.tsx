@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import { LoginPage, DashboardPage, CompletePage } from './pages/AuthPages';
+import { LoginPage, DashboardPage } from './pages/AuthPages';
+import { CompletePage } from './pages/CompletePage';
 import { ExamRoute } from './pages/ExamRoute';
 import { AdminPage } from './pages/AdminPage';
 

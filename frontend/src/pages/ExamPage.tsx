@@ -54,7 +54,7 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
     });
   }, []);
 
-  const { blurCount, isBlurred, fullscreen, requestFullscreen } = useAntiCheat(handleBlur);
+  const { isBlurred, fullscreen, requestFullscreen } = useAntiCheat(handleBlur);
 
   useEffect(() => {
     api
@@ -208,7 +208,7 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
     return (
       <div className="min-h-screen bg-surface-100">
         <ProctorBar
-          blurCount={blurCount}
+          blurCount={session.blurCount}
           isBlurred={isBlurred}
           fullscreen={fullscreen}
           onRequestFullscreen={requestFullscreen}
@@ -231,7 +231,7 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
   return (
     <div className="min-h-screen bg-surface-100">
       <ProctorBar
-        blurCount={blurCount}
+        blurCount={session.blurCount}
         isBlurred={isBlurred}
         fullscreen={fullscreen}
         onRequestFullscreen={requestFullscreen}
