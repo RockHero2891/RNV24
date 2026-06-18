@@ -40,6 +40,7 @@ export function LoginPage() {
           <p className="mt-2 text-sm text-surface-600">
             Simulador de examen para práctica del equipo
           </p>
+          <p className="mt-3 text-xs text-surface-400">v1.0.0 &copy; 2026 RNV24</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
