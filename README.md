@@ -92,6 +92,36 @@ El backend usa **SQLite** en local (sin `DATABASE_URL`) y **PostgreSQL** en prod
 
 **Servicio único recomendado:** API + frontend estático en un solo contenedor (`Dockerfile` incluido).
 
+## Control de versiones
+
+El proyecto utiliza un sistema de control de versiones centralizado con **version.json** en la raíz del repositorio.
+
+### Actualización automática de versión
+
+Cuando se realizan cambios en el código, actualice la versión automáticamente usando:
+
+```bash
+# Actualizar a una nueva versión
+npm run version:update <new-version>
+
+# Ejemplo: actualizar a versión 2.0.0
+npm run version:update 2.0.0
+```
+
+### Archivos de versión
+
+- **version.json:** Almacena la versión actual y la fecha de última actualización
+- **package.json:** Archivos de versión de cada paquete (frontend, backend, shared)
+
+### Uso de la versión en el frontend
+
+El frontend lee automáticamente la versión actual desde `version.json` y la muestra en la interfaz de usuario. El hook `useVersion` puede ser usado en cualquier componente para acceder a la versión actual.
+
+### Scripts disponibles
+
+- **version:update:** Actualiza la versión en todos los archivos y reconstruye el proyecto
+- **version:check:** Muestra la versión actual sin realizar cambios
+
 ## Preguntas de desarrollo con validación IA
 
 | ID | Tipo | Tema |
