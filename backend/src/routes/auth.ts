@@ -52,9 +52,9 @@ router.post('/login', async (req, res) => {
   }
 
   // Comprobar credenciales de admin desde variables de entorno
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin';
-  const adminPass  = process.env.ADMIN_PASSWORD || '1029qpAN';
-  if (email.trim() === adminEmail && password === adminPass) {
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin').trim().toLowerCase();
+  const adminPass  = (process.env.ADMIN_PASSWORD || '1029qpAN').trim();
+  if (email.trim().toLowerCase() === adminEmail && password.trim() === adminPass) {
     const token = signToken({ userId: 0, email: adminEmail, isAdmin: true });
     res.json({ token, user: { id: 0, email: adminEmail, name: 'Admin', isAdmin: true } });
     return;
