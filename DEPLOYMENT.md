@@ -1,11 +1,11 @@
 # RNV24 Deployment Guide
 
-Deploy the certification platform as a **single Northflank service** (Node.js API + static frontend) backed by **Neon PostgreSQL**.
+Deploy the certification platform as a **single Render service** (Node.js API + static frontend) backed by **Neon PostgreSQL**.
 
 ## Architecture
 
 ```
-Browser → Northflank (Node.js :PORT) → Neon PostgreSQL
+Browser → Render (Node.js :PORT) → Neon PostgreSQL
                     ↓
               OpenAI API (code validation)
 ```
@@ -19,7 +19,7 @@ The backend serves `frontend/dist` in production, so you do **not** need a separ
 ### Create project (console)
 
 1. Sign in at [console.neon.tech](https://console.neon.tech)
-2. **New Project** → name: `rnv24` (or similar), region closest to your Northflank region
+2. **New Project** → name: `rnv24` (or similar), region closest to your Render region
 3. Open the project → **Dashboard** → copy the **connection string** (pooled recommended for serverless/containers)
 
 Format:
@@ -71,12 +71,12 @@ Generate a JWT secret (PowerShell):
 [Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 }))
 ```
 
-### Production (Northflank dashboard)
+### Production (Render dashboard)
 
 | Variable | Required | Example / notes |
 |----------|----------|-----------------|
 | `NODE_ENV` | Yes | `production` |
-| `PORT` | Auto | Northflank sets this; app reads `process.env.PORT` |
+| `PORT` | Auto | Render sets this; app reads `process.env.PORT` |
 | `JWT_SECRET` | Yes | Strong random string (same as local, but unique for prod) |
 | `DATABASE_URL` | Yes | Neon pooled connection string with `?sslmode=require` |
 | `OPENAI_API_KEY` | Recommended | Enables AI code validation |
@@ -88,11 +88,11 @@ Generate a JWT secret (PowerShell):
 
 ---
 
-## 3. Northflank deployment
+## 3. Render deployment
 
 ### Create project
 
-1. [Northflank](https://northflank.com) → **New project** → name `rnv24`
+1. [Render](https://render.com) → **New project** → name `rnv24`
 2. **Create new service** → **Combined** or **Deployment**
 3. **Source:** GitHub → `RockHero2891/RNV24` → branch `main`
 
@@ -106,7 +106,7 @@ Generate a JWT secret (PowerShell):
 | Port | `3001` (or match `PORT` env) |
 | Health check | `GET /api/health` |
 
-Northflank injects `PORT`; the app binds to `0.0.0.0`.
+Render injects `PORT`; the app binds to `0.0.0.0`.
 
 ### Build settings (without Docker — buildpack)
 
@@ -123,7 +123,7 @@ Northflank injects `PORT`; the app binds to `0.0.0.0`.
 
 ### After deploy
 
-1. Open the Northflank public URL
+1. Open the Render public URL
 2. Register a test user
 3. `GET https://<your-url>/api/health` should return `"database": "postgresql"` when `DATABASE_URL` is set
 

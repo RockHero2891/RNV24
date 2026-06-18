@@ -77,7 +77,7 @@ Con `OPENAI_API_KEY`, se envía el enunciado + código del estudiante a OpenAI y
 - Máximo 10 intentos de verificación por ejercicio de desarrollo
 - UI en español, diseño sobrio sin emojis
 
-## Despliegue (GitHub + Northflank + Neon)
+## Despliegue (GitHub + Render + Neon)
 
 Guía detallada: **[DEPLOYMENT.md](./DEPLOYMENT.md)**
 
@@ -85,7 +85,7 @@ Guía detallada: **[DEPLOYMENT.md](./DEPLOYMENT.md)**
 
 1. **GitHub:** https://github.com/RockHero2891/RNV24
 2. **Neon:** crear proyecto PostgreSQL, copiar `DATABASE_URL` (pooled, `sslmode=require`)
-3. **Northflank:** conectar repo, usar `Dockerfile`, configurar variables de entorno
+3. **Render:** conectar repo, usar `Dockerfile`, configurar variables de entorno
 4. **OpenAI:** opcional, `OPENAI_API_KEY` + `OPENAI_MODEL=gpt-4o-mini`
 
 El backend usa **SQLite** en local (sin `DATABASE_URL`) y **PostgreSQL** en producción (con `DATABASE_URL`). El esquema se aplica automáticamente al arrancar.
