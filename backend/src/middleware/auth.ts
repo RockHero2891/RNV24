@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 export interface AuthPayload {
   userId: number;
   email: string;
+  isAdmin: boolean;
 }
 
 declare global {
@@ -22,14 +23,24 @@ export function signToken(payload: AuthPayload): string {
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'No autorizado' });
-    return;
-  }
-
+  if (!header?.startsWith('Bearer ')) { res.status(401).json({ error: 'No autorizado' }); return; }
   try {
     const token = header.slice(7);
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ error: 'Token inválido o expirado' });
+  }
+}
+
+export function adminMiddleware(req: Request, res: Response, next: NextFunction): void {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) { res.status(401).json({ error: 'No autorizado' }); return; }
+  try {
+    const token = header.slice(7);
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    if (!decoded.isAdmin) { res.status(403).json({ error: 'Acceso solo para administradores' }); return; }
     req.user = decoded;
     next();
   } catch {

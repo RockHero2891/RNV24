@@ -238,7 +238,7 @@ router.post('/validate-code', authMiddleware, async (req, res) => {
     return;
   }
 
-  const result = await validateCode(ctx.validationKey, code.trim(), ctx.questionContext, ctx.solution);
+  const result = await validateCode(ctx.validationKey, code.trim());
 
   await db.run(
     `INSERT INTO validation_attempts (session_id, question_id, code_submitted, is_valid, feedback, score)

@@ -9,8 +9,15 @@ const SQLITE_SCHEMA = `
     email TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
+    last_ip TEXT,
+    last_login TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  -- Migraciones seguras
+  CREATE TABLE IF NOT EXISTS _migrations (id INTEGER PRIMARY KEY, name TEXT UNIQUE);
+  INSERT OR IGNORE INTO _migrations VALUES (1, 'add_last_ip');
+  INSERT OR IGNORE INTO _migrations VALUES (2, 'add_last_login');
 
   CREATE TABLE IF NOT EXISTS exam_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

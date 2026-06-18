@@ -152,6 +152,19 @@ export const api = {
       correct: number;
       percentage: number;
     }>(`/api/sessions/${sessionId}/summary`),
+
+  deleteMyAccount: () =>
+    request<{ ok: boolean }>('/api/auth/me', { method: 'DELETE' }),
+
+  adminGetUsers: () =>
+    request<{ users: Array<{
+      id: number; name: string; email: string; created_at: string;
+      last_ip: string | null; last_login: string | null;
+      session_count: number; completed_count: number;
+    }> }>('/api/auth/admin/users'),
+
+  adminDeleteUser: (id: number) =>
+    request<{ ok: boolean }>(`/api/auth/admin/users/${id}`, { method: 'DELETE' }),
 };
 
 export function setAuthToken(token: string | null) {

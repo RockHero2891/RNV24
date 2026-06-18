@@ -10,8 +10,20 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) NOT NULL UNIQUE,
   name VARCHAR(255) NOT NULL,
   password_hash TEXT NOT NULL,
+  last_ip VARCHAR(100),
+  last_login TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migraciones seguras (columnas que pueden no existir en DBs viejas)
+DO $mig$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='last_ip') THEN
+    ALTER TABLE users ADD COLUMN last_ip VARCHAR(100);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='last_login') THEN
+    ALTER TABLE users ADD COLUMN last_login TIMESTAMPTZ;
+  END IF;
+END $mig$;
 
 CREATE TABLE IF NOT EXISTS exam_sessions (
   id SERIAL PRIMARY KEY,

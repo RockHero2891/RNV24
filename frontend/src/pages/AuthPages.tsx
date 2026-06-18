@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
+// ── Login / Registro ──────────────────────────────────────────────────────────
 export function LoginPage() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
@@ -17,7 +18,6 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       if (mode === 'login') await login(email, password);
       else await register(email, password, name);
@@ -45,50 +45,19 @@ export function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
             <div>
-              <label className="label" htmlFor="name">
-                Nombre
-              </label>
-              <input
-                id="name"
-                className="input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
+              <label className="label" htmlFor="name">Nombre</label>
+              <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
           )}
-
           <div>
-            <label className="label" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              className="input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <label className="label" htmlFor="email">Email</label>
+            <input id="email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
-
           <div>
-            <label className="label" htmlFor="password">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              className="input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+            <label className="label" htmlFor="password">Contraseña</label>
+            <input id="password" type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
-
           {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
-
           <button type="submit" className="btn-primary w-full" disabled={loading}>
             {loading ? 'Procesando...' : mode === 'login' ? 'Iniciar sesión' : 'Registrarse'}
           </button>
@@ -96,11 +65,8 @@ export function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-surface-600">
           {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
-          <button
-            type="button"
-            className="font-semibold text-brand-600 hover:underline"
-            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-          >
+          <button type="button" className="font-semibold text-brand-600 hover:underline"
+            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
             {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
           </button>
         </p>
@@ -109,27 +75,35 @@ export function LoginPage() {
   );
 }
 
+// ── Dashboard ─────────────────────────────────────────────────────────────────
 export function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [proctoringAccepted, setProctoringAccepted] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const startExam = async () => {
-    if (!proctoringAccepted) {
-      setError('Debes aceptar las condiciones de supervisión simulada.');
-      return;
-    }
+    if (!proctoringAccepted) { setError('Debes aceptar las condiciones de supervisión simulada.'); return; }
     setLoading(true);
     setError('');
-    try {
-      navigate('/exam');
-    } catch (err) {
+    try { navigate('/exam'); } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar el examen');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await api.deleteMyAccount();
+      logout();
+      navigate('/login');
+    } catch {
+      setError('No se pudo eliminar la cuenta. Intenta de nuevo.');
+      setShowDeleteConfirm(false);
+    } finally { setDeleting(false); }
   };
 
   return (
@@ -140,9 +114,14 @@ export function DashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">RNV24</p>
             <h1 className="text-lg font-bold text-surface-900">Panel de certificación</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="text-sm text-surface-600">{user?.name}</span>
-            <button type="button" className="btn-secondary" onClick={logout}>
+            {user?.isAdmin && (
+              <button type="button" className="btn-secondary text-sm" onClick={() => navigate('/admin')}>
+                Panel Admin
+              </button>
+            )}
+            <button type="button" className="btn-secondary" onClick={() => { logout(); navigate('/login'); }}>
               Cerrar sesión
             </button>
           </div>
@@ -156,7 +135,7 @@ export function DashboardPage() {
           </h2>
           <p className="mt-3 max-w-2xl text-surface-600">
             Simulador del ambiente estricto de certificación: 7 secciones, temporizadores por sección y
-            ejercicio, ventana total de 15 horas, supervisión simulada y verificación de código con IA.
+            ejercicio, ventana total de 15 horas, supervisión simulada y verificación heurística de código.
           </p>
 
           <ul className="mt-6 grid gap-2 text-sm text-surface-700 sm:grid-cols-2">
@@ -170,16 +149,11 @@ export function DashboardPage() {
 
           <div className="mt-6 rounded-md border border-surface-200 bg-surface-50 p-4">
             <label className="flex cursor-pointer items-start gap-3 text-sm text-surface-700">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={proctoringAccepted}
-                onChange={(e) => setProctoringAccepted(e.target.checked)}
-              />
+              <input type="checkbox" className="mt-1" checked={proctoringAccepted}
+                onChange={(e) => setProctoringAccepted(e.target.checked)} />
               <span>
                 Acepto el entorno de supervisión <strong>simulado</strong> (cámara, micrófono y
-                pantalla compartida sin captura real, detección de foco y pantalla completa
-                recomendada).
+                pantalla compartida sin captura real, detección de foco y pantalla completa recomendada).
               </span>
             </label>
           </div>
@@ -193,47 +167,54 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-xs text-surface-500">
-          <Link to="/" className="hover:underline">
-            Volver al inicio
-          </Link>
-        </p>
+        {!user?.isAdmin && (
+          <div className="mt-6 text-center">
+            {!showDeleteConfirm ? (
+              <button type="button" className="text-xs text-red-400 hover:text-red-600 hover:underline"
+                onClick={() => setShowDeleteConfirm(true)}>
+                Eliminar mi cuenta
+              </button>
+            ) : (
+              <div className="inline-flex items-center gap-3 rounded-md bg-red-50 px-4 py-2">
+                <span className="text-xs text-red-800">¿Confirmas? Se borrarán todos tus datos.</span>
+                <button type="button" className="text-xs font-semibold text-red-700 hover:underline"
+                  disabled={deleting} onClick={handleDeleteAccount}>
+                  {deleting ? 'Eliminando...' : 'Sí, eliminar'}
+                </button>
+                <button type="button" className="text-xs text-surface-500 hover:underline"
+                  onClick={() => setShowDeleteConfirm(false)}>
+                  Cancelar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
 }
 
+// ── Complete ──────────────────────────────────────────────────────────────────
 export function CompletePage() {
   const navigate = useNavigate();
   const [summary, setSummary] = useState<{
-    correct: number;
-    totalQuestions: number;
-    percentage: number;
+    correct: number; totalQuestions: number; percentage: number;
   } | null>(null);
 
   useEffect(() => {
-    api
-      .getActiveSession()
-      .then(async ({ session }) => {
-        if (session) {
-          const data = await api.getSummary(session.id);
-          setSummary({
-            correct: data.correct,
-            totalQuestions: data.totalQuestions,
-            percentage: data.percentage,
-          });
-        }
-      })
-      .catch(() => {});
+    api.getActiveSession().then(async ({ session }) => {
+      if (session) {
+        const data = await api.getSummary(session.id);
+        setSummary({ correct: data.correct, totalQuestions: data.totalQuestions, percentage: data.percentage });
+      }
+    }).catch(() => {});
   }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="card max-w-lg p-8 text-center">
         <h1 className="text-2xl font-bold text-surface-900">Examen completado</h1>
-        <p className="mt-3 text-surface-600">
-          Has finalizado las 7 secciones del simulador RNV24.
-        </p>
+        <p className="mt-3 text-surface-600">Has finalizado las 7 secciones del simulador RNV24.</p>
         {summary && (
           <p className="mt-4 text-lg font-semibold text-brand-700">
             {summary.correct} aciertos de {summary.totalQuestions} ({summary.percentage}%)

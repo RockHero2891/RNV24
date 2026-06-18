@@ -122,17 +122,6 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
 
       {isDev && (
         <div className="space-y-3">
-          {question.preview && (
-            <div className="rounded-md border border-dashed border-surface-200 bg-surface-50 p-4">
-              <p className="mb-2 text-xs font-medium text-surface-500">Vista previa del resultado esperado</p>
-              <div className="flex gap-2.5">
-                <div className="h-[100px] w-[100px] bg-[#ff5733]" />
-                <div className="h-[100px] w-[100px] bg-[#33ff57]" />
-                <div className="h-[100px] w-[100px] bg-[#3357ff]" />
-              </div>
-            </div>
-          )}
-
           <textarea
             value={code}
             disabled={answered}

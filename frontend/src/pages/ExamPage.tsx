@@ -271,7 +271,17 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
           />
         )}
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex items-center justify-between">
+          <button
+            type="button"
+            className="btn-secondary px-4"
+            onClick={() => {
+              persistTimers();
+              navigate('/dashboard');
+            }}
+          >
+            ← Pausar y salir
+          </button>
           <button
             type="button"
             className="btn-success px-6"
