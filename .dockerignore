@@ -1,0 +1,24 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build artifacts (rebuilt in container)
+dist
+**/dist
+.vite
+
+# Local env and data
+.env
+.env.local
+*.db
+*.sqlite
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+*.md
+!DEPLOYMENT.md
+
+# Logs
+*.log
