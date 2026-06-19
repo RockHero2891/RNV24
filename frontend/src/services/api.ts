@@ -78,6 +78,47 @@ export interface ValidationResponse {
   solution?: string;
 }
 
+export interface UserStats {
+  totalSessions: number;
+  completedSessions: number;
+  activeSessions: number;
+  bestPercentage: number;
+  averagePercentage: number;
+  sessions: Array<{
+    id: number;
+    status: string;
+    startedAt: string;
+    completedAt: string | null;
+    blurCount: number;
+    answered: number;
+    correct: number;
+    percentage: number;
+  }>;
+}
+
+export interface AdminUserStats {
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    created_at: string;
+    last_ip: string | null;
+    last_login: string | null;
+  };
+  sessions: Array<{
+    id: number;
+    status: string;
+    startedAt: string;
+    completedAt: string | null;
+    currentQuestionId: number;
+    blurCount: number;
+    answeredCount: number;
+    correctCount: number;
+    attemptsCount: number;
+    percentage: number;
+  }>;
+}
+
 export const api = {
   register: (email: string, password: string, name: string) =>
     request<{ token: string; user: User }>('/api/auth/register', {
@@ -109,6 +150,11 @@ export const api = {
         attempts: number;
       }>;
     }>('/api/sessions/active'),
+
+  getMyStats: () => request<UserStats>('/api/sessions/stats'),
+
+  resetActiveSession: () =>
+    request<{ ok: boolean; resetCount: number }>('/api/sessions/reset', { method: 'POST' }),
 
   saveProgress: (sessionId: number, data: Partial<ExamSession> & { status?: string }) =>
     request<{ session: ExamSession }>(`/api/sessions/${sessionId}/progress`, {
@@ -161,8 +207,15 @@ export const api = {
     request<{ users: Array<{
       id: number; name: string; email: string; created_at: string;
       last_ip: string | null; last_login: string | null;
-      session_count: number; completed_count: number;
+      session_count: number; completed_count: number; active_count: number;
+      answered_count: number; correct_count: number; last_session_at: string | null;
     }> }>('/api/auth/admin/users'),
+
+  adminGetUserStats: (id: number) =>
+    request<AdminUserStats>(`/api/auth/admin/users/${id}/stats`),
+
+  adminResetUserActiveSession: (id: number) =>
+    request<{ ok: boolean; resetCount: number }>(`/api/auth/admin/users/${id}/reset-active`, { method: 'POST' }),
 
   adminDeleteUser: (id: number) =>
     request<{ ok: boolean }>(`/api/auth/admin/users/${id}`, { method: 'DELETE' }),

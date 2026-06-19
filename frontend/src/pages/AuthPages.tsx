@@ -1,19 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { api, type UserStats } from '../services/api';
 import { useAdminAccess } from '../hooks/useAdminAccess';
-import { AdminButton } from '../components/AdminButton';
 
-// ── Login / Registro ──────────────────────────────────────────────────────────
-export function LoginPage() {
-  const { login, register } = useAuth();
+function AdminLoginModal({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const adminAccess = useAdminAccess();
-  const [mode, setMode] = useState<'login' | 'register' | 'admin'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +21,81 @@ export function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      if (mode === 'login' || mode === 'admin') await login(email, password);
+      await login(email, password);
+      navigate('/admin');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Credenciales incorrectas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-xl border border-surface-200 bg-white p-6 shadow-card-hover">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">Administración</p>
+            <h2 className="mt-1 text-lg font-bold text-surface-900">Acceso restringido</h2>
+          </div>
+          <button type="button" className="btn-ghost px-2 py-1" onClick={onClose}>×</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="label" htmlFor="admin-user">Usuario</label>
+            <input
+              id="admin-user"
+              className="input"
+              type="text"
+              autoComplete="username"
+              placeholder="admin"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="label" htmlFor="admin-pass">Contraseña</label>
+            <input
+              id="admin-pass"
+              className="input"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {error && <div className="alert alert-error">{error}</div>}
+          <button type="submit" className="btn-primary w-full" disabled={loading}>
+            {loading ? 'Verificando...' : 'Entrar al panel'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Login / Registro ──────────────────────────────────────────────────────────
+export function LoginPage() {
+  const { login, register } = useAuth();
+  const navigate = useNavigate();
+  const adminAccess = useAdminAccess();
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      if (mode === 'login') await login(email, password);
       else await register(email, password, name);
       navigate('/dashboard');
     } catch (err) {
@@ -54,26 +127,27 @@ export function LoginPage() {
                { n: '15h', label: 'Ventana total' },
                { n: '×10', label: 'Intentos por ejercicio' },
              ].map(({ n, label }) => (
-               <div key={label} className="rounded-lg border border-surface-700 bg-surface-800/40 px-4 py-3 cursor-pointer hover:bg-surface-800/60 transition-colors"
-                 onClick={() => label === 'Secciones' && adminAccess.handleSevenClick()}>
-                 <p className="text-2xl font-bold text-white">{n}</p>
+               <div key={label} className="rounded-lg border border-surface-700 bg-surface-800/40 px-4 py-3">
+                 <p className="text-2xl font-bold text-white">
+                   {label === 'Secciones' ? (
+                     <button
+                       type="button"
+                       className="font-bold text-white"
+                       aria-label="Contador de secciones"
+                       onClick={() => {
+                         const nextCount = adminAccess.clickCount + 1;
+                         adminAccess.handleSevenClick();
+                         if (nextCount >= 5) setShowAdminModal(true);
+                       }}
+                     >
+                       {n}
+                     </button>
+                   ) : n}
+                 </p>
                  <p className="text-xs text-surface-400">{label}</p>
                </div>
              ))}
            </div>
-          {adminAccess.showAdminButton && (
-            <div className="mt-6">
-              <AdminButton
-                active={mode === 'admin'}
-                onClick={() => {
-                  setMode('admin');
-                  setEmail('');
-                  setPassword('');
-                  setError('');
-                }}
-              />
-            </div>
-          )}
         </div>
         <p className="absolute bottom-8 left-12 text-xs text-surface-600">
           v{__APP_VERSION__} · © {new Date().getFullYear()} RNV24
@@ -84,14 +158,12 @@ export function LoginPage() {
       <div className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm animate-fade-in">
           <h2 className="text-2xl font-bold text-surface-900">
-            {mode === 'register' ? 'Crear cuenta' : mode === 'admin' ? 'Acceso administrador' : 'Iniciar sesión'}
+            {mode === 'register' ? 'Crear cuenta' : 'Iniciar sesión'}
           </h2>
           <p className="mt-1 text-sm text-surface-500">
             {mode === 'register'
               ? 'Regístrate para comenzar'
-              : mode === 'admin'
-                ? 'Ingresa las credenciales administrativas'
-                : 'Ingresa para continuar tu simulacro'}
+              : 'Ingresa para continuar tu simulacro'}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -104,13 +176,13 @@ export function LoginPage() {
             )}
             <div>
               <label className="label" htmlFor="email">
-                {mode === 'admin' ? 'Usuario admin' : 'Email'}
+                Email
               </label>
               <input
                 id="email"
-                type={mode === 'register' ? 'email' : 'text'}
+                type="email"
                 className="input"
-                placeholder={mode === 'admin' ? 'Usuario configurado en Render' : 'tu@email.com'}
+                placeholder="tu@email.com"
                 value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div>
@@ -141,26 +213,14 @@ export function LoginPage() {
             </button>
           </p>
 
-          {adminAccess.showAdminButton && (
-            <div className="mt-4 flex justify-center">
-              <AdminButton
-                active={mode === 'admin'}
-                onClick={() => {
-                  setMode(mode === 'admin' ? 'login' : 'admin');
-                  setEmail('');
-                  setPassword('');
-                  setError('');
-                }}
-              />
-            </div>
-          )}
-
           {/* Versión en móvil */}
           <p className="mt-10 text-center text-xs text-surface-400 lg:hidden">
             v{__APP_VERSION__} · © {new Date().getFullYear()} RNV24
           </p>
         </div>
       </div>
+
+      {showAdminModal && <AdminLoginModal onClose={() => setShowAdminModal(false)} />}
     </div>
   );
 }
@@ -169,9 +229,10 @@ export function LoginPage() {
 export function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const adminAccess = useAdminAccess();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [resetting, setResetting] = useState(false);
   const [proctoringAccepted, setProctoringAccepted] = useState(() => {
     // Load from localStorage if user already accepted
     if (typeof window !== 'undefined') {
@@ -182,6 +243,14 @@ export function DashboardPage() {
   });
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const loadStats = () => {
+    api.getMyStats().then(setStats).catch(() => {});
+  };
+
+  useEffect(() => {
+    loadStats();
+  }, []);
 
   const startExam = async () => {
     if (!proctoringAccepted) { setError('Acepta las condiciones de supervisión para continuar.'); return; }
@@ -206,6 +275,21 @@ export function DashboardPage() {
     try { await api.deleteMyAccount(); logout(); navigate('/login'); }
     catch { setError('No se pudo eliminar la cuenta.'); setShowDelete(false); }
     finally { setDeleting(false); }
+  };
+
+  const handleResetActiveTest = async () => {
+    if (!confirm('¿Reiniciar el test en curso? El próximo inicio comenzará desde la primera pregunta.')) return;
+    setResetting(true);
+    setError('');
+    try {
+      await api.resetActiveSession();
+      loadStats();
+      localStorage.removeItem('rnv24_exam_local');
+    } catch {
+      setError('No se pudo reiniciar el test en curso.');
+    } finally {
+      setResetting(false);
+    }
   };
 
   const sections = [
@@ -271,8 +355,7 @@ export function DashboardPage() {
                 { value: '15 h', label: 'Ventana total' },
                 { value: '×10', label: 'Intentos / ejercicio' },
               ].map(({ value, label }) => (
-                <div key={label} className="rounded-lg bg-surface-50 border border-surface-200 px-3 py-2 text-center cursor-pointer hover:bg-surface-100 transition-colors"
-                  onClick={() => label === 'Secciones' && adminAccess.handleSevenClick()}>
+                <div key={label} className="rounded-lg bg-surface-50 border border-surface-200 px-3 py-2 text-center">
                   <p className="text-lg font-bold text-brand-700">{value}</p>
                   <p className="text-xs text-surface-500">{label}</p>
                 </div>
@@ -324,7 +407,7 @@ export function DashboardPage() {
 
             {error && <div className="alert alert-error mt-3">{error}</div>}
 
-            <div className="mt-4 flex items-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <button type="button" className="btn-primary px-6 py-2.5"
                 onClick={startExam} disabled={loading || !proctoringAccepted}>
                 {loading ? (
@@ -334,9 +417,67 @@ export function DashboardPage() {
                   </span>
                 ) : 'Iniciar / continuar examen →'}
               </button>
+              {(stats?.activeSessions ?? 0) > 0 && (
+                <button
+                  type="button"
+                  className="btn-secondary px-4 py-2.5"
+                  onClick={handleResetActiveTest}
+                  disabled={resetting}
+                >
+                  {resetting ? 'Reiniciando...' : 'Reiniciar test en curso'}
+                </button>
+              )}
             </div>
           </div>
         </div>
+
+        {stats && (
+          <section className="mt-6">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-surface-500">Tus estadísticas</h2>
+              <button type="button" className="text-xs font-semibold text-brand-600 hover:underline" onClick={loadStats}>
+                Actualizar
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {[
+                { label: 'Tests iniciados', value: stats.totalSessions },
+                { label: 'Completados', value: stats.completedSessions },
+                { label: 'Mejor puntaje', value: `${stats.bestPercentage}%` },
+                { label: 'Promedio', value: `${stats.averagePercentage}%` },
+              ].map((item) => (
+                <div key={item.label} className="rounded-lg border border-surface-200 bg-white px-4 py-3">
+                  <p className="text-xl font-bold text-surface-900">{item.value}</p>
+                  <p className="mt-0.5 text-xs text-surface-500">{item.label}</p>
+                </div>
+              ))}
+            </div>
+            {stats.sessions.length > 0 && (
+              <div className="mt-3 overflow-hidden rounded-lg border border-surface-200 bg-white">
+                <table className="w-full text-xs">
+                  <thead className="bg-surface-50 text-left font-semibold uppercase tracking-wide text-surface-500">
+                    <tr>
+                      <th className="px-3 py-2">Estado</th>
+                      <th className="px-3 py-2 text-center">Respondidas</th>
+                      <th className="px-3 py-2 text-center">Correctas</th>
+                      <th className="px-3 py-2 text-center">Puntaje</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-surface-100">
+                    {stats.sessions.slice(0, 4).map((session) => (
+                      <tr key={session.id}>
+                        <td className="px-3 py-2 text-surface-700">{session.status}</td>
+                        <td className="px-3 py-2 text-center">{session.answered}</td>
+                        <td className="px-3 py-2 text-center">{session.correct}</td>
+                        <td className="px-3 py-2 text-center font-semibold text-brand-700">{session.percentage}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Footer */}
         {!user?.isAdmin && (

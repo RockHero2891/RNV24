@@ -112,6 +112,67 @@ router.get('/active', authMiddleware, async (req, res) => {
   res.json({ session: mapSession(session), answers });
 });
 
+router.get('/stats', authMiddleware, async (req, res) => {
+  const db = getDb();
+  const userId = req.user!.userId;
+
+  const sessions = await db.all<Record<string, unknown>>(
+    `SELECT
+       es.id,
+       es.status,
+       es.started_at,
+       es.completed_at,
+       es.blur_count,
+       COUNT(a.id) AS answered,
+       SUM(CASE WHEN a.is_correct THEN 1 ELSE 0 END) AS correct
+     FROM exam_sessions es
+     LEFT JOIN answers a ON a.session_id = es.id
+     WHERE es.user_id = ?
+     GROUP BY es.id, es.status, es.started_at, es.completed_at, es.blur_count
+     ORDER BY es.started_at DESC`,
+    [userId]
+  );
+
+  const normalized = sessions.map((s) => {
+    const answered = Number(s.answered ?? 0);
+    const correct = Number(s.correct ?? 0);
+    return {
+      id: s.id,
+      status: s.status,
+      startedAt: s.started_at,
+      completedAt: s.completed_at,
+      blurCount: Number(s.blur_count ?? 0),
+      answered,
+      correct,
+      percentage: Math.round((correct / QUESTIONS.length) * 100),
+    };
+  });
+
+  const completed = normalized.filter((s) => s.status === 'completed');
+  const best = completed.reduce((max, s) => Math.max(max, s.percentage), 0);
+  const average = completed.length
+    ? Math.round(completed.reduce((sum, s) => sum + s.percentage, 0) / completed.length)
+    : 0;
+
+  res.json({
+    totalSessions: normalized.length,
+    completedSessions: completed.length,
+    activeSessions: normalized.filter((s) => s.status === 'active').length,
+    bestPercentage: best,
+    averagePercentage: average,
+    sessions: normalized.slice(0, 8),
+  });
+});
+
+router.post('/reset', authMiddleware, async (req, res) => {
+  const db = getDb();
+  const result = await db.run(
+    "UPDATE exam_sessions SET status = 'reset', updated_at = ? WHERE user_id = ? AND status = 'active'",
+    [new Date().toISOString(), req.user!.userId]
+  );
+  res.json({ ok: true, resetCount: result.changes });
+});
+
 router.put('/:sessionId/progress', authMiddleware, async (req, res) => {
   const sessionId = Number(req.params.sessionId);
   const {

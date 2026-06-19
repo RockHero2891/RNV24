@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
+import { QUESTIONS } from '@rnv24/shared';
 import { getDb } from '../db/index.js';
 import { signToken, authMiddleware, adminMiddleware } from '../middleware/auth.js';
 
@@ -52,7 +53,12 @@ router.post('/login', async (req, res) => {
   }
 
   // Comprobar credenciales de admin desde variables de entorno
-  const adminEmail = (process.env.ADMIN_EMAIL || 'admin').trim().toLowerCase();
+  const adminEmail = (
+    process.env.ADMIN_EMAIL ||
+    process.env.ADMIN_USER ||
+    process.env.ADMIN_USERNAME ||
+    'admin'
+  ).trim().toLowerCase();
   const adminPass  = (process.env.ADMIN_PASSWORD || '1029qpAN').trim();
   if (email.trim().toLowerCase() === adminEmail && password.trim() === adminPass) {
     const token = signToken({ userId: 0, email: adminEmail, isAdmin: true });
@@ -106,17 +112,75 @@ router.get('/admin/users', adminMiddleware, async (_req, res) => {
   const db = getDb();
   const users = await db.all<{
     id: number; name: string; email: string; created_at: string; last_ip: string | null; last_login: string | null;
-    session_count: number; completed_count: number;
+    session_count: number; completed_count: number; active_count: number; answered_count: number; correct_count: number;
+    last_session_at: string | null;
   }>(`
     SELECT u.id, u.name, u.email, u.created_at, u.last_ip, u.last_login,
            COUNT(DISTINCT es.id) AS session_count,
-           COUNT(DISTINCT CASE WHEN es.status = 'completed' THEN es.id END) AS completed_count
+           COUNT(DISTINCT CASE WHEN es.status = 'completed' THEN es.id END) AS completed_count,
+           COUNT(DISTINCT CASE WHEN es.status = 'active' THEN es.id END) AS active_count,
+           COUNT(a.id) AS answered_count,
+           SUM(CASE WHEN a.is_correct THEN 1 ELSE 0 END) AS correct_count,
+           MAX(es.started_at) AS last_session_at
     FROM users u
     LEFT JOIN exam_sessions es ON es.user_id = u.id
+    LEFT JOIN answers a ON a.session_id = es.id
     GROUP BY u.id
     ORDER BY u.created_at DESC
   `);
   res.json({ users });
+});
+
+router.get('/admin/users/:id/stats', adminMiddleware, async (req, res) => {
+  const userId = Number(req.params.id);
+  const db = getDb();
+
+  const user = await db.get<{ id: number; name: string; email: string; created_at: string; last_ip: string | null; last_login: string | null }>(
+    'SELECT id, name, email, created_at, last_ip, last_login FROM users WHERE id = ?',
+    [userId]
+  );
+  if (!user) { res.status(404).json({ error: 'Usuario no encontrado' }); return; }
+
+  const sessions = await db.all<{
+    id: number; status: string; started_at: string; completed_at: string | null; current_question_id: number;
+    blur_count: number; answered_count: number; correct_count: number; attempts_count: number;
+  }>(`
+    SELECT es.id, es.status, es.started_at, es.completed_at, es.current_question_id, es.blur_count,
+           COUNT(DISTINCT a.id) AS answered_count,
+           SUM(CASE WHEN a.is_correct THEN 1 ELSE 0 END) AS correct_count,
+           COUNT(DISTINCT va.id) AS attempts_count
+    FROM exam_sessions es
+    LEFT JOIN answers a ON a.session_id = es.id
+    LEFT JOIN validation_attempts va ON va.session_id = es.id
+    WHERE es.user_id = ?
+    GROUP BY es.id
+    ORDER BY es.started_at DESC
+  `, [userId]);
+
+  const normalized = sessions.map((s) => ({
+    id: s.id,
+    status: s.status,
+    startedAt: s.started_at,
+    completedAt: s.completed_at,
+    currentQuestionId: s.current_question_id,
+    blurCount: Number(s.blur_count ?? 0),
+    answeredCount: Number(s.answered_count ?? 0),
+    correctCount: Number(s.correct_count ?? 0),
+    attemptsCount: Number(s.attempts_count ?? 0),
+    percentage: Math.round((Number(s.correct_count ?? 0) / QUESTIONS.length) * 100),
+  }));
+
+  res.json({ user, sessions: normalized });
+});
+
+router.post('/admin/users/:id/reset-active', adminMiddleware, async (req, res) => {
+  const userId = Number(req.params.id);
+  const db = getDb();
+  const result = await db.run(
+    "UPDATE exam_sessions SET status = 'reset', updated_at = ? WHERE user_id = ? AND status = 'active'",
+    [new Date().toISOString(), userId]
+  );
+  res.json({ ok: true, resetCount: result.changes });
 });
 
 // ── Admin: borrar usuario ─────────────────────────────────────────────────────

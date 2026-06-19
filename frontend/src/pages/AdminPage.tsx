@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { api, type AdminUserStats } from '../services/api';
 
 interface AdminUser {
   id: number; name: string; email: string; created_at: string;
   last_ip: string | null; last_login: string | null;
-  session_count: number; completed_count: number;
+  session_count: number; completed_count: number; active_count: number;
+  answered_count: number; correct_count: number; last_session_at: string | null;
 }
 
 export function AdminPage() {
@@ -16,6 +17,9 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [resetting, setResetting] = useState<number | null>(null);
+  const [selectedStats, setSelectedStats] = useState<AdminUserStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   const fetchUsers = () => {
     setLoading(true);
@@ -40,8 +44,40 @@ export function AdminPage() {
     }
   };
 
+  const handleReset = async (id: number, name: string) => {
+    if (!confirm(`¿Reiniciar el test activo de ${name}?`)) return;
+    setResetting(id);
+    try {
+      await api.adminResetUserActiveSession(id);
+      fetchUsers();
+      if (selectedStats?.user.id === id) loadUserStats(id);
+    } catch {
+      setError('No se pudo reiniciar el test activo');
+    } finally {
+      setResetting(null);
+    }
+  };
+
+  const loadUserStats = (id: number) => {
+    setStatsLoading(true);
+    api.adminGetUserStats(id)
+      .then(setSelectedStats)
+      .catch(() => setError('No se pudieron cargar las estadísticas del usuario'))
+      .finally(() => setStatsLoading(false));
+  };
+
   const fmt = (s: string | null) =>
     s ? new Date(s).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+
+  const totals = users.reduce(
+    (acc, u) => ({
+      sessions: acc.sessions + Number(u.session_count ?? 0),
+      completed: acc.completed + Number(u.completed_count ?? 0),
+      active: acc.active + Number(u.active_count ?? 0),
+      answered: acc.answered + Number(u.answered_count ?? 0),
+    }),
+    { sessions: 0, completed: 0, active: 0, answered: 0 }
+  );
 
   return (
     <div className="min-h-screen">
@@ -63,6 +99,20 @@ export function AdminPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8">
+        <div className="mb-5 grid gap-3 sm:grid-cols-4">
+          {[
+            { label: 'Usuarios', value: users.length },
+            { label: 'Tests activos', value: totals.active },
+            { label: 'Tests completados', value: totals.completed },
+            { label: 'Respuestas', value: totals.answered },
+          ].map((item) => (
+            <div key={item.label} className="rounded-lg border border-surface-200 bg-white px-4 py-3">
+              <p className="text-2xl font-bold text-surface-900">{item.value}</p>
+              <p className="text-xs text-surface-500">{item.label}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-surface-900">
             Usuarios registrados ({users.length})
@@ -88,9 +138,10 @@ export function AdminPage() {
                   <th className="px-4 py-3">Registrado</th>
                   <th className="px-4 py-3">Último login</th>
                   <th className="px-4 py-3">IP</th>
-                  <th className="px-4 py-3 text-center">Sesiones</th>
-                  <th className="px-4 py-3 text-center">Completados</th>
-                  <th className="px-4 py-3"></th>
+                  <th className="px-4 py-3 text-center">Activos</th>
+                  <th className="px-4 py-3 text-center">Tests</th>
+                  <th className="px-4 py-3 text-center">Correctas</th>
+                  <th className="px-4 py-3 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-100 bg-white">
@@ -101,22 +152,98 @@ export function AdminPage() {
                     <td className="px-4 py-3 text-surface-500">{fmt(u.created_at)}</td>
                     <td className="px-4 py-3 text-surface-500">{fmt(u.last_login)}</td>
                     <td className="px-4 py-3 font-mono text-xs text-surface-500">{u.last_ip ?? '—'}</td>
+                    <td className="px-4 py-3 text-center font-semibold text-brand-700">{u.active_count}</td>
                     <td className="px-4 py-3 text-center text-surface-700">{u.session_count}</td>
-                    <td className="px-4 py-3 text-center text-emerald-700 font-semibold">{u.completed_count}</td>
+                    <td className="px-4 py-3 text-center text-emerald-700 font-semibold">{u.correct_count ?? 0}</td>
                     <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
-                        disabled={deleting === u.id}
-                        onClick={() => handleDelete(u.id, u.name)}
-                      >
-                        {deleting === u.id ? 'Eliminando...' : 'Eliminar'}
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          className="rounded px-2 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+                          onClick={() => loadUserStats(u.id)}
+                        >
+                          Estadísticas
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded px-2 py-1 text-xs font-semibold text-surface-600 hover:bg-surface-100 disabled:opacity-40"
+                          disabled={resetting === u.id || Number(u.active_count) === 0}
+                          onClick={() => handleReset(u.id, u.name)}
+                        >
+                          {resetting === u.id ? 'Reiniciando...' : 'Reiniciar'}
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-40"
+                          disabled={deleting === u.id}
+                          onClick={() => handleDelete(u.id, u.name)}
+                        >
+                          {deleting === u.id ? 'Eliminando...' : 'Eliminar'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {(selectedStats || statsLoading) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-950/50 px-4 backdrop-blur-sm">
+            <div className="max-h-[86vh] w-full max-w-3xl overflow-y-auto rounded-xl border border-surface-200 bg-white p-6 shadow-card-hover">
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">Detalle usuario</p>
+                  <h3 className="text-lg font-bold text-surface-900">
+                    {selectedStats ? selectedStats.user.name : 'Cargando...'}
+                  </h3>
+                  {selectedStats && (
+                    <p className="text-sm text-surface-500">
+                      {selectedStats.user.email} · IP: {selectedStats.user.last_ip ?? '—'}
+                    </p>
+                  )}
+                </div>
+                <button type="button" className="btn-ghost px-2 py-1" onClick={() => setSelectedStats(null)}>×</button>
+              </div>
+
+              {statsLoading || !selectedStats ? (
+                <p className="text-surface-500">Cargando estadísticas...</p>
+              ) : selectedStats.sessions.length === 0 ? (
+                <p className="text-surface-500">Este usuario aún no tiene sesiones.</p>
+              ) : (
+                <div className="overflow-hidden rounded-lg border border-surface-200">
+                  <table className="w-full text-sm">
+                    <thead className="bg-surface-50 text-left text-xs font-semibold uppercase tracking-wide text-surface-500">
+                      <tr>
+                        <th className="px-3 py-2">Inicio</th>
+                        <th className="px-3 py-2">Estado</th>
+                        <th className="px-3 py-2 text-center">Pregunta</th>
+                        <th className="px-3 py-2 text-center">Respondidas</th>
+                        <th className="px-3 py-2 text-center">Correctas</th>
+                        <th className="px-3 py-2 text-center">Intentos código</th>
+                        <th className="px-3 py-2 text-center">Alertas</th>
+                        <th className="px-3 py-2 text-center">Puntaje</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-100">
+                      {selectedStats.sessions.map((s) => (
+                        <tr key={s.id}>
+                          <td className="px-3 py-2 text-surface-600">{fmt(s.startedAt)}</td>
+                          <td className="px-3 py-2 text-surface-700">{s.status}</td>
+                          <td className="px-3 py-2 text-center">{s.currentQuestionId + 1}</td>
+                          <td className="px-3 py-2 text-center">{s.answeredCount}</td>
+                          <td className="px-3 py-2 text-center">{s.correctCount}</td>
+                          <td className="px-3 py-2 text-center">{s.attemptsCount}</td>
+                          <td className="px-3 py-2 text-center">{s.blurCount}</td>
+                          <td className="px-3 py-2 text-center font-semibold text-brand-700">{s.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
