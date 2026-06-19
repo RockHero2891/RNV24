@@ -28,9 +28,15 @@ export const QUESTIONS: Question[] = [
     id: 2,
     sectionId: 1,
     type: 'html',
-    question: `Genera en HTML tres elementos div de 100px por 100px dispuestos horizontalmente, cada uno con un color de fondo distinto. Debe existir un espacio de 10px entre cada bloque.
+    question: `Genera en HTML tres elementos \`div\` de 100px por 100px dispuestos horizontalmente, cada uno con un color de fondo distinto.
 
-Escribe el código HTML + CSS necesario:`,
+Debe existir un espacio de 10px entre cada bloque.
+
+Escribe el código HTML + CSS necesario:
+
+\`\`\`html
+<!-- Escribe tu solución aquí -->
+\`\`\``,
     solution: `<div style="display:flex; gap:10px;">
     <div style="width:100px; height:100px; background:#ff5733;"></div>
     <div style="width:100px; height:100px; background:#33ff57;"></div>
@@ -73,28 +79,35 @@ Escribe el código HTML + CSS necesario:`,
     id: 5,
     sectionId: 2,
     type: 'codigo',
-    question: `Completa el código para calcular temperatura máxima, mínima y promedio semanal:
+    question: `Completa el código para calcular temperatura máxima, mínima y promedio semanal.
 
+Agrega la lógica faltante desde el comentario indicado:
+
+\`\`\`javascript
 function analizarTemperaturas(temperaturas) {
     if (temperaturas.length === 0) {
-        return { promedio: null, máxima: null, mínima: null };
+        return { promedio: null, maxima: null, minima: null };
     }
+
     let suma = 0;
-    let mínima = temperaturas[0];
-    let máxima = temperaturas[0];
+    let minima = temperaturas[0];
+    let maxima = temperaturas[0];
+
     for (let temp of temperaturas) {
         suma += temp;
-        // ESCRIBE TU CÓDIGO A PARTIR DE AQUÍ
-        
+        // ESCRIBE TU CODIGO A PARTIR DE AQUI
+
     }
-    return { promedio, máxima, mínima };
-}`,
-    solution: `if (temp < mínima) mínima = temp;
-if (temp > máxima) máxima = temp;
+
+    return { promedio, maxima, minima };
+}
+\`\`\``,
+    solution: `if (temp < minima) minima = temp;
+if (temp > maxima) maxima = temp;
 let promedio = suma / temperaturas.length;`,
     hints: [
-      'Dentro del bucle: if (temp < mínima) mínima = temp;',
-      'if (temp > máxima) máxima = temp;',
+      'Dentro del bucle: if (temp < minima) minima = temp;',
+      'if (temp > maxima) maxima = temp;',
       'let promedio = suma / temperaturas.length;',
     ],
     devTimeMinutes: 18,
@@ -293,22 +306,29 @@ let promedio = suma / temperaturas.length;`,
     id: 21,
     sectionId: 3,
     type: 'codigo',
-    question: `Completa el código para calcular el producto más vendido:
+    question: `Completa el código para calcular el producto más vendido.
 
+Agrega la lógica faltante dentro del segundo \`for\`:
+
+\`\`\`javascript
 function procesarPedidos(pedidos) {
     if (pedidos.length === 0) {
         return { totalVentas: 0, productoMasVendido: null };
     }
+
     let totalVentas = 0;
     const conteoProductos = {};
+
     for (const pedido of pedidos) {
         for (const producto of pedido.productos) {
-            // COMIENZA A ESCRIBIR TU CÓDIGO AQUÍ
-            
+            // COMIENZA A ESCRIBIR TU CODIGO AQUI
+
         }
     }
+
     return { totalVentas, productoMasVendido };
-}`,
+}
+\`\`\``,
     solution: `totalVentas += producto.precio * producto.cantidad;
 const nombre = producto.nombre;
 if (conteoProductos[nombre]) {
@@ -422,12 +442,18 @@ if (conteoProductos[nombre]) {
     id: 29,
     sectionId: 4,
     type: 'sql',
-    question: `Escribe una consulta SQL que devuelva, por cada categoría de producto, el total de unidades vendidas. 
-El resultado debe mostrar: category y total_vendido, ordenado por total_vendido descendente.
+    question: `Escribe una consulta SQL que devuelva, por cada categoria de producto, el total de unidades vendidas.
+
+El resultado debe mostrar \`category\` y \`total_vendido\`, ordenado por \`total_vendido\` descendente.
 
 Tablas:
-- products: id, name, category
-- order_items: id, order_id, product_id, quantity`,
+
+- \`products\`: \`id\`, \`name\`, \`category\`
+- \`order_items\`: \`id\`, \`order_id\`, \`product_id\`, \`quantity\`
+
+\`\`\`sql
+-- Escribe tu consulta aqui
+\`\`\``,
     solution: `SELECT p.category, SUM(oi.quantity) AS total_vendido
 FROM products p
 JOIN order_items oi ON p.id = oi.product_id
@@ -445,13 +471,20 @@ ORDER BY total_vendido DESC;`,
     id: 30,
     sectionId: 4,
     type: 'sql',
-    question: `Escribe una consulta SQL que muestre el nombre del producto y el total de unidades vendidas, 
-pero solo para aquellos productos cuyo total supere las 500 unidades.
-Usa una CTE (WITH).
+    question: `Escribe una consulta SQL que muestre el nombre del producto y el total de unidades vendidas.
+
+Solo deben aparecer los productos cuyo total supere las 500 unidades.
+
+Usa una CTE con \`WITH\`.
 
 Tablas:
-- productos: id, nombre, precio_unitario
-- ventas: id, id_producto, cantidad, fecha`,
+
+- \`productos\`: \`id\`, \`nombre\`, \`precio_unitario\`
+- \`ventas\`: \`id\`, \`id_producto\`, \`cantidad\`, \`fecha\`
+
+\`\`\`sql
+-- Escribe tu consulta aqui
+\`\`\``,
     solution: `WITH total_por_producto AS (
     SELECT p.id, p.nombre, SUM(v.cantidad) AS total_unidades
     FROM productos p
@@ -473,14 +506,28 @@ WHERE total_unidades > 500;`,
     id: 31,
     sectionId: 4,
     type: 'sql',
-    question: `Escribe una consulta SQL para insertar dos productos en la tabla Productos usando valores explícitos y valores por defecto.
-La tabla tiene: id_producto INT, nombre VARCHAR(100), precio DECIMAL(10,2), stock INT DEFAULT 0, fecha_creacion DATE DEFAULT CURRENT_DATE
+    question: `Escribe una consulta SQL para insertar dos productos en la tabla \`Productos\` usando valores explicitos y valores por defecto.
+
+La tabla tiene esta estructura:
+
+\`\`\`sql
+id_producto INT,
+nombre VARCHAR(100),
+precio DECIMAL(10,2),
+stock INT DEFAULT 0,
+fecha_creacion DATE DEFAULT CURRENT_DATE
+\`\`\`
 
 Debes insertar:
-- Producto 1: id=1, nombre='Laptop', precio=1200.00
-- Producto 2: id=2, nombre='Mouse', precio=25.00
 
-Asegúrate de que stock y fecha_creacion usen los valores por defecto.`,
+- Producto 1: \`id=1\`, \`nombre='Laptop'\`, \`precio=1200.00\`
+- Producto 2: \`id=2\`, \`nombre='Mouse'\`, \`precio=25.00\`
+
+Asegurate de que \`stock\` y \`fecha_creacion\` usen los valores por defecto.
+
+\`\`\`sql
+-- Escribe tu consulta aqui
+\`\`\``,
     solution: `INSERT INTO Productos (id_producto, nombre, precio)
 VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
     hints: [

@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import type { ExamMetadata } from '../services/api';
 import { api } from '../services/api';
-import { preventCopyPaste, preventContextMenu } from '../hooks/useAntiCheat';
+import { CodeEditor } from './CodeEditor';
 import { MAX_DEV_ATTEMPTS, getQuestionById } from '@rnv24/shared';
 
 interface QuestionViewProps {
@@ -31,6 +32,25 @@ function AttemptsBar({ used, max }: { used: number; max: number }) {
       </div>
       <span className="text-xs text-surface-500">{used}/{max} intentos</span>
     </div>
+  );
+}
+
+function QuestionMarkdown({ children }: { children: string }) {
+  return (
+    <ReactMarkdown
+      className="question-markdown"
+      components={{
+        code({ className, children }) {
+          const isBlock = className?.startsWith('language-');
+          if (!isBlock) {
+            return <code className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-[0.92em] text-brand-800">{children}</code>;
+          }
+          return <code className={className}>{children}</code>;
+        },
+      }}
+    >
+      {children}
+    </ReactMarkdown>
   );
 }
 
@@ -109,9 +129,13 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
       </div>
 
       {/* Enunciado */}
-      <div className="mb-6 whitespace-pre-wrap text-base font-medium leading-relaxed text-surface-900">
-        {question.question}
-      </div>
+      {isDev ? (
+        <QuestionMarkdown>{question.question}</QuestionMarkdown>
+      ) : (
+        <div className="mb-6 whitespace-pre-wrap text-base font-medium leading-relaxed text-surface-900">
+          {question.question}
+        </div>
+      )}
 
       {/* Test */}
       {question.type === 'test' && question.options && (
@@ -143,14 +167,12 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
       {/* Dev */}
       {isDev && (
         <div className="space-y-4">
-          <textarea
-            value={code} disabled={answered}
-            onChange={(e) => setCode(e.target.value)}
-            onCopy={preventCopyPaste} onCut={preventCopyPaste}
-            onPaste={preventCopyPaste} onContextMenu={preventContextMenu}
+          <CodeEditor
+            value={code}
+            onChange={setCode}
+            disabled={answered}
+            language={question.type === 'sql' ? 'sql' : question.type === 'html' ? 'html' : 'codigo'}
             placeholder={question.type === 'sql' ? 'Escribe tu consulta SQL aquí...' : 'Escribe tu código aquí...'}
-            className="code-area"
-            spellCheck={false}
           />
 
           <div className="flex items-center justify-between">
