@@ -129,13 +129,7 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
       </div>
 
       {/* Enunciado */}
-      {isDev ? (
-        <QuestionMarkdown>{question.question}</QuestionMarkdown>
-      ) : (
-        <div className="mb-6 whitespace-pre-wrap text-base font-medium leading-relaxed text-surface-900">
-          {question.question}
-        </div>
-      )}
+      <QuestionMarkdown className="mb-6">{question.question}</QuestionMarkdown>
 
       {/* Test */}
       {question.type === 'test' && question.options && (
@@ -157,7 +151,7 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
                 <span className="mr-2.5 font-bold text-surface-400">
                   {String.fromCharCode(65 + idx)}.
                 </span>
-                {opt}
+                <QuestionMarkdown>{opt}</QuestionMarkdown>
               </button>
             );
           })}

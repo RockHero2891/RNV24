@@ -2,17 +2,16 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+import { useAdminAccess } from '../hooks/useAdminAccess';
+import { AdminButton } from '../components/AdminButton';
 
 // ── Shared ────────────────────────────────────────────────────────────────────
 function Logo() {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 shadow-sm">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M3 4h10M3 8h7M3 12h5" stroke="white" strokeWidth="1.75" strokeLinecap="round"/>
-        </svg>
-      </div>
-      <span className="text-sm font-bold tracking-tight text-surface-900">RNV24</span>
+    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 shadow-sm">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 4h10M3 8h7M3 12h5" stroke="white" strokeWidth="1.75" strokeLinecap="round"/>
+      </svg>
     </div>
   );
 }
@@ -21,6 +20,7 @@ function Logo() {
 export function LoginPage() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
+  const adminAccess = useAdminAccess();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -72,6 +72,21 @@ export function LoginPage() {
               </div>
             ))}
           </div>
+          {adminAccess.showAdminButton && !adminAccess.isAdmin && (
+            <div className="mt-6">
+              <AdminButton
+                onClick={() => {
+                  adminAccess.loginAsAdmin().then((success) => {
+                    if (success) {
+                      navigate('/dashboard');
+                    } else {
+                      setError('Credenciales de admin incorrectas');
+                    }
+                  });
+                }}
+              />
+            </div>
+          )}
         </div>
         <p className="text-xs text-surface-600">
           v{__APP_VERSION__} · © {new Date().getFullYear()} RNV24
@@ -136,6 +151,23 @@ export function LoginPage() {
             </button>
           </p>
 
+          {/* Admin button */}
+          {adminAccess.showAdminButton && !adminAccess.isAdmin && (
+            <div className="mt-4">
+              <AdminButton
+                onClick={() => {
+                  adminAccess.loginAsAdmin().then((success) => {
+                    if (success) {
+                      navigate('/dashboard');
+                    } else {
+                      setError('Credenciales de admin incorrectas');
+                    }
+                  });
+                }}
+              />
+            </div>
+          )}
+
           {/* Versión en móvil */}
           <p className="mt-10 text-center text-xs text-surface-400 lg:hidden">
             v{__APP_VERSION__} · © {new Date().getFullYear()} RNV24
@@ -150,15 +182,33 @@ export function LoginPage() {
 export function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const adminAccess = useAdminAccess();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [proctoringAccepted, setProctoringAccepted] = useState(false);
+  const [proctoringAccepted, setProctoringAccepted] = useState(() => {
+    // Load from localStorage if user already accepted
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`rnv24_proctoring_accepted_${user?.id}`);
+      return stored === 'true';
+    }
+    return false;
+  });
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const startExam = async () => {
     if (!proctoringAccepted) { setError('Acepta las condiciones de supervisión para continuar.'); return; }
     setLoading(true); setError('');
+    
+    // Request fullscreen to simulate exam environment
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (fsErr) {
+      console.warn('Fullscreen request failed:', fsErr);
+    }
+    
     try { navigate('/exam'); }
     catch (err) { setError(err instanceof Error ? err.message : 'No se pudo iniciar el examen'); }
     finally { setLoading(false); }
@@ -193,17 +243,30 @@ export function DashboardPage() {
               </svg>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">RNV24</p>
               <p className="text-xs text-surface-500 leading-none">v{__APP_VERSION__}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden sm:block text-sm text-surface-600 font-medium">{user?.name}</span>
-            {user?.isAdmin && (
+            {adminAccess.isAdmin && (
               <button type="button" className="btn-secondary text-xs px-3 py-1.5"
                 onClick={() => navigate('/admin')}>
                 ⚙ Admin
               </button>
+            )}
+            {adminAccess.showAdminButton && !adminAccess.isAdmin && (
+              <AdminButton
+                onClick={() => {
+                  adminAccess.loginAsAdmin().then((success) => {
+                    if (success) {
+                      navigate('/dashboard');
+                    } else {
+                      setError('Credenciales de admin incorrectas');
+                    }
+                  });
+                }}
+                className="ml-2"
+              />
             )}
             <button type="button" className="btn-ghost text-xs px-3 py-1.5"
               onClick={() => { logout(); navigate('/login'); }}>
@@ -213,53 +276,53 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-10 animate-fade-in">
+      <main className="mx-auto max-w-5xl px-4 py-6 animate-fade-in">
         {/* Hero card */}
         <div className="card overflow-hidden">
-          <div className="bg-brand-950 px-8 py-6">
+          <div className="bg-brand-950 px-6 py-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-brand-400">Simulador oficial</p>
-            <h1 className="mt-1 text-2xl font-bold text-white">
+            <h1 className="mt-1 text-xl font-bold text-white">
               Test RNV24 Certificación · Full Stack Javascript
             </h1>
-            <p className="mt-2 text-sm text-surface-400 max-w-xl">
+            <p className="mt-1 text-sm text-surface-400 max-w-xl">
               Ambiente estricto con temporizadores reales, supervisión simulada y verificación heurística de código.
             </p>
           </div>
 
-          <div className="px-8 py-6">
+          <div className="px-6 py-4">
             {/* Secciones */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
               {[
                 { value: '65', label: 'Preguntas' },
                 { value: '7',  label: 'Secciones' },
                 { value: '15 h', label: 'Ventana total' },
                 { value: '×10', label: 'Intentos / ejercicio' },
               ].map(({ value, label }) => (
-                <div key={label} className="rounded-lg bg-surface-50 border border-surface-200 px-4 py-3 text-center">
-                  <p className="text-xl font-bold text-brand-700">{value}</p>
-                  <p className="mt-0.5 text-xs text-surface-500">{label}</p>
+                <div key={label} className="rounded-lg bg-surface-50 border border-surface-200 px-3 py-2 text-center">
+                  <p className="text-lg font-bold text-brand-700">{value}</p>
+                  <p className="text-xs text-surface-500">{label}</p>
                 </div>
               ))}
             </div>
 
             {/* Tabla de secciones */}
-            <div className="overflow-hidden rounded-lg border border-surface-200 mb-6">
-              <table className="w-full text-sm">
+            <div className="overflow-hidden rounded-lg border border-surface-200 mb-4">
+              <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-surface-50 text-left text-xs font-semibold uppercase tracking-wide text-surface-500">
-                    <th className="px-4 py-2.5">#</th>
-                    <th className="px-4 py-2.5">Sección</th>
-                    <th className="px-4 py-2.5 text-center">Preguntas</th>
-                    <th className="px-4 py-2.5 text-right">Tiempo</th>
+                    <th className="px-3 py-2">#</th>
+                    <th className="px-3 py-2">Sección</th>
+                    <th className="px-3 py-2 text-center">Preguntas</th>
+                    <th className="px-3 py-2 text-right">Tiempo</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-surface-100">
                   {sections.map((s) => (
                     <tr key={s.id} className="hover:bg-surface-50 transition-colors">
-                      <td className="px-4 py-2.5 text-surface-400 font-mono text-xs">{String(s.id).padStart(2,'0')}</td>
-                      <td className="px-4 py-2.5 font-medium text-surface-800">{s.title}</td>
-                      <td className="px-4 py-2.5 text-center text-surface-600">{s.q}</td>
-                      <td className="px-4 py-2.5 text-right text-surface-600">{s.mins} min</td>
+                      <td className="px-3 py-2 text-surface-400 font-mono text-xs">{String(s.id).padStart(2,'0')}</td>
+                      <td className="px-3 py-2 font-medium text-surface-800">{s.title}</td>
+                      <td className="px-3 py-2 text-center text-surface-600">{s.q}</td>
+                      <td className="px-3 py-2 text-right text-surface-600">{s.mins} min</td>
                     </tr>
                   ))}
                 </tbody>
@@ -267,10 +330,17 @@ export function DashboardPage() {
             </div>
 
             {/* Supervisión */}
-            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-surface-200 bg-surface-50 p-4 transition-colors hover:bg-white">
+            <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-surface-200 bg-surface-50 p-3 transition-colors hover:bg-white">
               <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand-600"
                 checked={proctoringAccepted}
-                onChange={(e) => { setProctoringAccepted(e.target.checked); setError(''); }} />
+                onChange={(e) => { 
+                  setProctoringAccepted(e.target.checked); 
+                  setError('');
+                  // Persist to localStorage
+                  if (user?.id && e.target.checked) {
+                    localStorage.setItem(`rnv24_proctoring_accepted_${user.id}`, 'true');
+                  }
+                }} />
               <span className="text-sm text-surface-700 leading-relaxed">
                 Acepto el entorno de <strong className="text-surface-900">supervisión simulada</strong> —
                 cámara, micrófono y pantalla compartida sin captura real.
@@ -278,9 +348,9 @@ export function DashboardPage() {
               </span>
             </label>
 
-            {error && <div className="alert alert-error mt-4">{error}</div>}
+            {error && <div className="alert alert-error mt-3">{error}</div>}
 
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-4 flex items-center gap-3">
               <button type="button" className="btn-primary px-6 py-2.5"
                 onClick={startExam} disabled={loading || !proctoringAccepted}>
                 {loading ? (

@@ -35,7 +35,6 @@ Debe existir un espacio de 10px entre cada bloque.
 Escribe el código HTML + CSS necesario:
 
 \`\`\`html
-<!-- Escribe tu solución aquí -->
 \`\`\``,
     solution: `<div style="display:flex; gap:10px;">
     <div style="width:100px; height:100px; background:#ff5733;"></div>
@@ -95,7 +94,6 @@ function analizarTemperaturas(temperaturas) {
 
     for (let temp of temperaturas) {
         suma += temp;
-        // ESCRIBE TU CODIGO A PARTIR DE AQUI
 
     }
 
