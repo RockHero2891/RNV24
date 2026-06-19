@@ -1,6 +1,6 @@
 {
   "name": "rnv24-certificacion",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Test RNV24 Certificación - Full Stack Javascript",
   "workspaces": [

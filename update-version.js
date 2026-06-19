@@ -2,6 +2,9 @@ const { readFileSync, writeFileSync } = require('node:fs');
 const { execSync } = require('node:child_process');
 
 const newVersion = process.argv[2];
+const npmCommand = process.env.npm_execpath
+  ? `"${process.execPath}" "${process.env.npm_execpath}"`
+  : 'npm';
 
 if (!newVersion) {
   console.error('Error: New version number required');
@@ -28,7 +31,7 @@ for (const file of jsonFiles) {
   console.log(`Updated ${file} to ${newVersion}`);
 }
 
-execSync('npm install --package-lock-only --ignore-scripts', { stdio: 'inherit' });
-execSync('npm run build', { stdio: 'inherit' });
+execSync(`${npmCommand} install --package-lock-only --ignore-scripts`, { stdio: 'inherit' });
+execSync(`${npmCommand} run build`, { stdio: 'inherit' });
 
 console.log(`Version update complete: ${newVersion}`);
