@@ -1,6 +1,6 @@
 {
   "name": "rnv24-certificacion",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Test RNV24 Certificación - Full Stack Javascript",
   "workspaces": [
@@ -13,7 +13,7 @@
     "build": "npm run build -w shared && npm run build -w frontend && npm run build -w backend",
     "start": "npm run start -w backend",
     "install:all": "npm install",
-    "version:update": "node update-version.sh",
+    "version:update": "node update-version.js",
     "version:check": "node -e \"console.log('Current version:', require('./version.json').version)\""
   },
   "devDependencies": {

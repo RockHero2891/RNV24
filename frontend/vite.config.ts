@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 let version = '1.0.0';
 
 try {
   const versionJsonPath = path.resolve(__dirname, '../version.json');
-  if (readFileSync(versionJsonPath, 'utf-8')) {
+  if (existsSync(versionJsonPath)) {
     const versionData = JSON.parse(readFileSync(versionJsonPath, 'utf-8'));
     if (versionData.version) {
       version = versionData.version;
@@ -16,9 +16,6 @@ try {
 } catch (error) {
   console.warn('Could not read version.json, using default version:', error);
 }
-
-const packageVersion = JSON.parse(readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8')) as { version: string };
-version = packageVersion.version;
 
 export default defineConfig({
   plugins: [react()],

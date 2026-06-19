@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 import dotenv from 'dotenv';
 import { QUESTIONS, SECTIONS } from '@rnv24/shared';
 import { initDatabase } from './db/index.js';
@@ -13,17 +14,33 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
+const versionFile = path.resolve(__dirname, '../../version.json');
+
+function readVersionInfo() {
+  try {
+    return JSON.parse(readFileSync(versionFile, 'utf-8')) as { version: string; lastUpdated?: string };
+  } catch {
+    return { version: '1.0.0' };
+  }
+}
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {
+  const versionInfo = readVersionInfo();
   res.json({
     status: 'ok',
+    version: versionInfo.version,
+    lastUpdated: versionInfo.lastUpdated,
     timestamp: new Date().toISOString(),
     database: process.env.DATABASE_URL ? 'postgresql' : 'sqlite',
     aiValidation: Boolean(process.env.OPENAI_API_KEY),
   });
+});
+
+app.get('/version.json', (_req, res) => {
+  res.json(readVersionInfo());
 });
 
 app.get('/api/exam/metadata', (_req, res) => {
