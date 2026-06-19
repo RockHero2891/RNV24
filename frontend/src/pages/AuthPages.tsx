@@ -5,17 +5,6 @@ import { api } from '../services/api';
 import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AdminButton } from '../components/AdminButton';
 
-// ── Shared ────────────────────────────────────────────────────────────────────
-function Logo() {
-  return (
-    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 shadow-sm">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M3 4h10M3 8h7M3 12h5" stroke="white" strokeWidth="1.75" strokeLinecap="round"/>
-      </svg>
-    </div>
-  );
-}
-
 // ── Login / Registro ──────────────────────────────────────────────────────────
 export function LoginPage() {
   const { login, register } = useAuth();

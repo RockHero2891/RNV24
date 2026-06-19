@@ -129,7 +129,7 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
       </div>
 
       {/* Enunciado */}
-      <QuestionMarkdown className="mb-6">{question.question}</QuestionMarkdown>
+      <QuestionMarkdown>{question.question}</QuestionMarkdown>
 
       {/* Test */}
       {question.type === 'test' && question.options && (
