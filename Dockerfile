@@ -27,7 +27,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=build /app/package.json /app/package-lock.json ./
+COPY --from=build /app/package.json /app/package-lock.json /app/version.json ./
 COPY --from=build /app/frontend/package.json ./frontend/
 COPY --from=build /app/backend/package.json ./backend/
 COPY --from=build /app/shared/package.json ./shared/
