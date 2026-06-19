@@ -32,10 +32,8 @@ export const QUESTIONS: Question[] = [
 
 Debe existir un espacio de 10px entre cada bloque.
 
-Escribe el código HTML + CSS necesario:
-
-\`\`\`html
-\`\`\``,
+Escribe el código HTML + CSS necesario:`,
+    starterCode: '',
     solution: `<div style="display:flex; gap:10px;">
     <div style="width:100px; height:100px; background:#ff5733;"></div>
     <div style="width:100px; height:100px; background:#33ff57;"></div>
@@ -80,10 +78,8 @@ Escribe el código HTML + CSS necesario:
     type: 'codigo',
     question: `Completa el código para calcular temperatura máxima, mínima y promedio semanal.
 
-Agrega la lógica faltante desde el comentario indicado:
-
-\`\`\`javascript
-function analizarTemperaturas(temperaturas) {
+Agrega la lógica faltante desde el comentario indicado:`,
+    starterCode: `function analizarTemperaturas(temperaturas) {
     if (temperaturas.length === 0) {
         return { promedio: null, maxima: null, minima: null };
     }
@@ -99,8 +95,7 @@ function analizarTemperaturas(temperaturas) {
     }
 
     return { promedio, maxima, minima };
-}
-\`\`\``,
+}`,
     solution: `if (temp < minima) minima = temp;
 if (temp > maxima) maxima = temp;
 let promedio = suma / temperaturas.length;`,
@@ -307,10 +302,8 @@ let promedio = suma / temperaturas.length;`,
     type: 'codigo',
     question: `Completa el código para calcular el producto más vendido.
 
-Agrega la lógica faltante dentro del segundo \`for\`:
-
-\`\`\`javascript
-function procesarPedidos(pedidos) {
+Agrega la lógica faltante dentro del segundo \`for\`:`,
+    starterCode: `function procesarPedidos(pedidos) {
     if (pedidos.length === 0) {
         return { totalVentas: 0, productoMasVendido: null };
     }
@@ -326,8 +319,7 @@ function procesarPedidos(pedidos) {
     }
 
     return { totalVentas, productoMasVendido };
-}
-\`\`\``,
+}`,
     solution: `totalVentas += producto.precio * producto.cantidad;
 const nombre = producto.nombre;
 if (conteoProductos[nombre]) {
@@ -448,11 +440,8 @@ El resultado debe mostrar \`category\` y \`total_vendido\`, ordenado por \`total
 Tablas:
 
 - \`products\`: \`id\`, \`name\`, \`category\`
-- \`order_items\`: \`id\`, \`order_id\`, \`product_id\`, \`quantity\`
-
-\`\`\`sql
--- Escribe tu consulta aqui
-\`\`\``,
+- \`order_items\`: \`id\`, \`order_id\`, \`product_id\`, \`quantity\``,
+    starterCode: '',
     solution: `SELECT p.category, SUM(oi.quantity) AS total_vendido
 FROM products p
 JOIN order_items oi ON p.id = oi.product_id
@@ -479,11 +468,8 @@ Usa una CTE con \`WITH\`.
 Tablas:
 
 - \`productos\`: \`id\`, \`nombre\`, \`precio_unitario\`
-- \`ventas\`: \`id\`, \`id_producto\`, \`cantidad\`, \`fecha\`
-
-\`\`\`sql
--- Escribe tu consulta aqui
-\`\`\``,
+- \`ventas\`: \`id\`, \`id_producto\`, \`cantidad\`, \`fecha\``,
+    starterCode: '',
     solution: `WITH total_por_producto AS (
     SELECT p.id, p.nombre, SUM(v.cantidad) AS total_unidades
     FROM productos p
@@ -509,24 +495,19 @@ WHERE total_unidades > 500;`,
 
 La tabla tiene esta estructura:
 
-\`\`\`sql
-id_producto INT,
-nombre VARCHAR(100),
-precio DECIMAL(10,2),
-stock INT DEFAULT 0,
-fecha_creacion DATE DEFAULT CURRENT_DATE
-\`\`\`
+- \`id_producto INT\`
+- \`nombre VARCHAR(100)\`
+- \`precio DECIMAL(10,2)\`
+- \`stock INT DEFAULT 0\`
+- \`fecha_creacion DATE DEFAULT CURRENT_DATE\`
 
 Debes insertar:
 
 - Producto 1: \`id=1\`, \`nombre='Laptop'\`, \`precio=1200.00\`
 - Producto 2: \`id=2\`, \`nombre='Mouse'\`, \`precio=25.00\`
 
-Asegurate de que \`stock\` y \`fecha_creacion\` usen los valores por defecto.
-
-\`\`\`sql
--- Escribe tu consulta aqui
-\`\`\``,
+Asegurate de que \`stock\` y \`fecha_creacion\` usen los valores por defecto.`,
+    starterCode: '',
     solution: `INSERT INTO Productos (id_producto, nombre, precio)
 VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
     hints: [

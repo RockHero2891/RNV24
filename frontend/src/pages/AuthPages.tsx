@@ -10,7 +10,7 @@ export function LoginPage() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const adminAccess = useAdminAccess();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'admin'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -22,7 +22,7 @@ export function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      if (mode === 'login') await login(email, password);
+      if (mode === 'login' || mode === 'admin') await login(email, password);
       else await register(email, password, name);
       navigate('/dashboard');
     } catch (err) {
@@ -35,7 +35,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen">
       {/* Panel izquierdo — identidad */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-brand-950 px-12 py-10">
+      <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-center bg-brand-950 px-12 py-12">
         <div className="animate-fade-in">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-400">
             Certificación Full Stack
@@ -61,23 +61,21 @@ export function LoginPage() {
                </div>
              ))}
            </div>
-          {adminAccess.showAdminButton && !adminAccess.isAdmin && (
+          {adminAccess.showAdminButton && (
             <div className="mt-6">
               <AdminButton
+                active={mode === 'admin'}
                 onClick={() => {
-                  adminAccess.loginAsAdmin().then((success) => {
-                    if (success) {
-                      navigate('/dashboard');
-                    } else {
-                      setError('Credenciales de admin incorrectas');
-                    }
-                  });
+                  setMode('admin');
+                  setEmail('');
+                  setPassword('');
+                  setError('');
                 }}
               />
             </div>
           )}
         </div>
-        <p className="text-xs text-surface-600">
+        <p className="absolute bottom-8 left-12 text-xs text-surface-600">
           v{__APP_VERSION__} · © {new Date().getFullYear()} RNV24
         </p>
       </div>
@@ -86,12 +84,14 @@ export function LoginPage() {
       <div className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm animate-fade-in">
           <h2 className="text-2xl font-bold text-surface-900">
-            {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
+            {mode === 'register' ? 'Crear cuenta' : mode === 'admin' ? 'Acceso administrador' : 'Iniciar sesión'}
           </h2>
           <p className="mt-1 text-sm text-surface-500">
-            {mode === 'login'
-              ? 'Ingresa para continuar tu simulacro'
-              : 'Regístrate para comenzar'}
+            {mode === 'register'
+              ? 'Regístrate para comenzar'
+              : mode === 'admin'
+                ? 'Ingresa las credenciales administrativas'
+                : 'Ingresa para continuar tu simulacro'}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -103,8 +103,14 @@ export function LoginPage() {
               </div>
             )}
             <div>
-              <label className="label" htmlFor="email">Email</label>
-              <input id="email" type="email" className="input" placeholder="tu@email.com"
+              <label className="label" htmlFor="email">
+                {mode === 'admin' ? 'Usuario admin' : 'Email'}
+              </label>
+              <input
+                id="email"
+                type={mode === 'register' ? 'email' : 'text'}
+                className="input"
+                placeholder={mode === 'admin' ? 'Usuario configurado en Render' : 'tu@email.com'}
                 value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div>
@@ -123,30 +129,27 @@ export function LoginPage() {
                   <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                   Procesando...
                 </span>
-              ) : mode === 'login' ? 'Entrar' : 'Registrarme'}
+              ) : mode === 'register' ? 'Registrarme' : 'Entrar'}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-surface-500">
-            {mode === 'login' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
+            {mode === 'register' ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}{' '}
             <button type="button" className="font-semibold text-brand-600 hover:underline"
-              onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}>
-              {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}
+              onClick={() => { setMode(mode === 'register' ? 'login' : 'register'); setError(''); }}>
+              {mode === 'register' ? 'Inicia sesión' : 'Regístrate'}
             </button>
           </p>
 
-          {/* Admin button */}
-          {adminAccess.showAdminButton && !adminAccess.isAdmin && (
-            <div className="mt-4">
+          {adminAccess.showAdminButton && (
+            <div className="mt-4 flex justify-center">
               <AdminButton
+                active={mode === 'admin'}
                 onClick={() => {
-                  adminAccess.loginAsAdmin().then((success) => {
-                    if (success) {
-                      navigate('/dashboard');
-                    } else {
-                      setError('Credenciales de admin incorrectas');
-                    }
-                  });
+                  setMode(mode === 'admin' ? 'login' : 'admin');
+                  setEmail('');
+                  setPassword('');
+                  setError('');
                 }}
               />
             </div>
@@ -232,25 +235,11 @@ export function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden sm:block text-sm text-surface-600 font-medium">{user?.name}</span>
-            {adminAccess.isAdmin && (
+            {user?.isAdmin && (
               <button type="button" className="btn-secondary text-xs px-3 py-1.5"
                 onClick={() => navigate('/admin')}>
                 ⚙ Admin
               </button>
-            )}
-            {adminAccess.showAdminButton && !adminAccess.isAdmin && (
-              <AdminButton
-                onClick={() => {
-                  adminAccess.loginAsAdmin().then((success) => {
-                    if (success) {
-                      navigate('/dashboard');
-                    } else {
-                      setError('Credenciales de admin incorrectas');
-                    }
-                  });
-                }}
-                className="ml-2"
-              />
             )}
             <button type="button" className="btn-ghost text-xs px-3 py-1.5"
               onClick={() => { logout(); navigate('/login'); }}>

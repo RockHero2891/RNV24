@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { ExamMetadata } from '../services/api';
 import { api } from '../services/api';
@@ -65,6 +65,16 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
   const [attempts, setAttempts]   = useState(0);
   const [hintIndex, setHintIndex] = useState(0);
   const [solution, setSolution]   = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!question) return;
+    setCode(question.starterCode ?? '');
+    setSelected(null);
+    setFeedback(null);
+    setAttempts(0);
+    setHintIndex(0);
+    setSolution(null);
+  }, [question?.id, question?.starterCode]);
 
   if (!question) return null;
 
@@ -133,7 +143,7 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
 
       {/* Test */}
       {question.type === 'test' && question.options && (
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {question.options.map((opt, idx) => {
             const isSelected = selected === idx;
             const isCorrect  = answered && fullQuestion?.correctIndex === idx;
@@ -141,17 +151,17 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
             return (
               <button key={idx} type="button" disabled={answered} onClick={() => setSelected(idx)}
                 className={[
-                  'w-full rounded-lg border px-4 py-3 text-left text-sm transition-all duration-150',
+                  'flex w-full items-start rounded-lg border px-3.5 py-2.5 text-left text-sm transition-all duration-150',
                   isCorrect ? 'border-green-400 bg-green-50 text-green-900' :
                   isWrong   ? 'border-red-400 bg-red-50 text-red-900' :
                   isSelected ? 'border-brand-500 bg-brand-50 text-brand-900' :
                   'border-surface-200 bg-surface-50 hover:border-surface-300 hover:bg-white',
                   answered ? 'cursor-default' : 'cursor-pointer',
                 ].join(' ')}>
-                <span className="mr-2.5 font-bold text-surface-400">
+                <span className="mr-2.5 mt-0.5 shrink-0 font-bold text-surface-400">
                   {String.fromCharCode(65 + idx)}.
                 </span>
-                <QuestionMarkdown>{opt}</QuestionMarkdown>
+                <span className="leading-6">{opt}</span>
               </button>
             );
           })}

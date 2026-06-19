@@ -57,6 +57,7 @@ app.get('/api/exam/metadata', (_req, res) => {
       preview: q.preview,
       devTimeMinutes: q.devTimeMinutes,
       hints: q.hints,
+      starterCode: q.starterCode,
     })),
   });
 });

@@ -8,6 +8,7 @@ export interface Question {
   options?: string[];
   correctIndex?: number;
   solution?: string;
+  starterCode?: string;
   hints?: string[];
   preview?: boolean;
   devTimeMinutes?: number;
