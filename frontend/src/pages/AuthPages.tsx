@@ -47,7 +47,6 @@ export function LoginPage() {
     <div className="flex min-h-screen">
       {/* Panel izquierdo — identidad */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-brand-950 px-12 py-10">
-        <Logo />
         <div className="animate-fade-in">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-brand-400">
             Certificación Full Stack
@@ -59,19 +58,20 @@ export function LoginPage() {
             7 secciones · 65 preguntas · temporizadores exactos · verificación de código.
             El mismo ambiente del examen oficial.
           </p>
-          <div className="mt-10 grid grid-cols-2 gap-4">
-            {[
-              { n: '65', label: 'Preguntas' },
-              { n: '7',  label: 'Secciones' },
-              { n: '15h', label: 'Ventana total' },
-              { n: '×10', label: 'Intentos por ejercicio' },
-            ].map(({ n, label }) => (
-              <div key={label} className="rounded-lg border border-surface-700 bg-surface-800/40 px-4 py-3">
-                <p className="text-2xl font-bold text-white">{n}</p>
-                <p className="text-xs text-surface-400">{label}</p>
-              </div>
-            ))}
-          </div>
+           <div className="mt-10 grid grid-cols-2 gap-4">
+             {[
+               { n: '65', label: 'Preguntas' },
+               { n: '7',  label: 'Secciones' },
+               { n: '15h', label: 'Ventana total' },
+               { n: '×10', label: 'Intentos por ejercicio' },
+             ].map(({ n, label }) => (
+               <div key={label} className="rounded-lg border border-surface-700 bg-surface-800/40 px-4 py-3 cursor-pointer hover:bg-surface-800/60 transition-colors"
+                 onClick={() => label === 'Secciones' && adminAccess.handleSevenClick()}>
+                 <p className="text-2xl font-bold text-white">{n}</p>
+                 <p className="text-xs text-surface-400">{label}</p>
+               </div>
+             ))}
+           </div>
           {adminAccess.showAdminButton && !adminAccess.isAdmin && (
             <div className="mt-6">
               <AdminButton
@@ -96,11 +96,6 @@ export function LoginPage() {
       {/* Panel derecho — formulario */}
       <div className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm animate-fade-in">
-          {/* Logo móvil */}
-          <div className="mb-8 lg:hidden">
-            <Logo />
-          </div>
-
           <h2 className="text-2xl font-bold text-surface-900">
             {mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
           </h2>
@@ -298,7 +293,8 @@ export function DashboardPage() {
                 { value: '15 h', label: 'Ventana total' },
                 { value: '×10', label: 'Intentos / ejercicio' },
               ].map(({ value, label }) => (
-                <div key={label} className="rounded-lg bg-surface-50 border border-surface-200 px-3 py-2 text-center">
+                <div key={label} className="rounded-lg bg-surface-50 border border-surface-200 px-3 py-2 text-center cursor-pointer hover:bg-surface-100 transition-colors"
+                  onClick={() => label === 'Secciones' && adminAccess.handleSevenClick()}>
                   <p className="text-lg font-bold text-brand-700">{value}</p>
                   <p className="text-xs text-surface-500">{label}</p>
                 </div>

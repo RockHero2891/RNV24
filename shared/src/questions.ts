@@ -94,6 +94,7 @@ function analizarTemperaturas(temperaturas) {
 
     for (let temp of temperaturas) {
         suma += temp;
+        // ESCRIBE TU CODIGO A PARTIR DE AQUI
 
     }
 
