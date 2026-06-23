@@ -119,8 +119,8 @@ router.get('/admin/users', adminMiddleware, async (_req, res) => {
            COUNT(DISTINCT es.id) AS session_count,
            COUNT(DISTINCT CASE WHEN es.status = 'completed' THEN es.id END) AS completed_count,
            COUNT(DISTINCT CASE WHEN es.status = 'active' THEN es.id END) AS active_count,
-           COUNT(a.id) AS answered_count,
-           SUM(CASE WHEN a.is_correct THEN 1 ELSE 0 END) AS correct_count,
+           COUNT(DISTINCT a.id) AS answered_count,
+           COUNT(DISTINCT CASE WHEN a.is_correct THEN a.id END) AS correct_count,
            MAX(es.started_at) AS last_session_at
     FROM users u
     LEFT JOIN exam_sessions es ON es.user_id = u.id
@@ -147,7 +147,7 @@ router.get('/admin/users/:id/stats', adminMiddleware, async (req, res) => {
   }>(`
     SELECT es.id, es.status, es.started_at, es.completed_at, es.current_question_id, es.blur_count,
            COUNT(DISTINCT a.id) AS answered_count,
-           SUM(CASE WHEN a.is_correct THEN 1 ELSE 0 END) AS correct_count,
+           COUNT(DISTINCT CASE WHEN a.is_correct THEN a.id END) AS correct_count,
            COUNT(DISTINCT va.id) AS attempts_count
     FROM exam_sessions es
     LEFT JOIN answers a ON a.session_id = es.id
@@ -157,18 +157,21 @@ router.get('/admin/users/:id/stats', adminMiddleware, async (req, res) => {
     ORDER BY es.started_at DESC
   `, [userId]);
 
-  const normalized = sessions.map((s) => ({
-    id: s.id,
-    status: s.status,
-    startedAt: s.started_at,
-    completedAt: s.completed_at,
-    currentQuestionId: s.current_question_id,
-    blurCount: Number(s.blur_count ?? 0),
-    answeredCount: Number(s.answered_count ?? 0),
-    correctCount: Number(s.correct_count ?? 0),
-    attemptsCount: Number(s.attempts_count ?? 0),
-    percentage: Math.round((Number(s.correct_count ?? 0) / QUESTIONS.length) * 100),
-  }));
+  const normalized = sessions.map((s) => {
+    const correctCount = Math.min(Number(s.correct_count ?? 0), QUESTIONS.length);
+    return {
+      id: s.id,
+      status: s.status,
+      startedAt: s.started_at,
+      completedAt: s.completed_at,
+      currentQuestionId: s.current_question_id,
+      blurCount: Number(s.blur_count ?? 0),
+      answeredCount: Math.min(Number(s.answered_count ?? 0), QUESTIONS.length),
+      correctCount,
+      attemptsCount: Number(s.attempts_count ?? 0),
+      percentage: Math.min(100, Math.round((correctCount / QUESTIONS.length) * 100)),
+    };
+  });
 
   res.json({ user, sessions: normalized });
 });

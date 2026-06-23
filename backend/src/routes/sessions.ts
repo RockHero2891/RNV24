@@ -123,8 +123,8 @@ router.get('/stats', authMiddleware, async (req, res) => {
        es.started_at,
        es.completed_at,
        es.blur_count,
-       COUNT(a.id) AS answered,
-       SUM(CASE WHEN a.is_correct THEN 1 ELSE 0 END) AS correct
+       COUNT(DISTINCT a.id) AS answered,
+       COUNT(DISTINCT CASE WHEN a.is_correct THEN a.id END) AS correct
      FROM exam_sessions es
      LEFT JOIN answers a ON a.session_id = es.id
      WHERE es.user_id = ?
@@ -134,8 +134,8 @@ router.get('/stats', authMiddleware, async (req, res) => {
   );
 
   const normalized = sessions.map((s) => {
-    const answered = Number(s.answered ?? 0);
-    const correct = Number(s.correct ?? 0);
+    const answered = Math.min(Number(s.answered ?? 0), QUESTIONS.length);
+    const correct = Math.min(Number(s.correct ?? 0), QUESTIONS.length);
     return {
       id: s.id,
       status: s.status,
@@ -144,7 +144,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
       blurCount: Number(s.blur_count ?? 0),
       answered,
       correct,
-      percentage: Math.round((correct / QUESTIONS.length) * 100),
+      percentage: Math.min(100, Math.round((correct / QUESTIONS.length) * 100)),
     };
   });
 
