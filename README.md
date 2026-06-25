@@ -71,13 +71,14 @@ Cada ejercicio de desarrollo tiene un máximo de 10 intentos de verificación.
 - Temporizadores: sesión (15 h), sección y ejercicio de desarrollo
 - Pausas entre secciones con progreso persistente
 - Autenticación email/contraseña con bcrypt + JWT Bearer
-- Registro protegido con validación de nombre real, aceptación de proveedores personales comunes, bloqueo de correos de prueba/temporales y límite temporal de creación de cuentas
+- Registro configurable desde admin: nómina privada, modo abierto estricto, modo abierto flexible o registro básico
+- Validación de nombre real, aceptación de proveedores personales comunes, bloqueo de correos de prueba/temporales y límite temporal de creación de cuentas
 - Persistencia en SQLite/PostgreSQL: usuarios, sesiones, respuestas, intentos de validación y configuración del test
 - Supervisión simulada: cámara/mic/pantalla (indicadores), detección blur, pantalla completa
 - Editor de código tipo VSCode con resaltado, autocompletado, Tab, indentación automática y copiar/pegar habilitado
 - Máximo 10 intentos de verificación por ejercicio de desarrollo
 - Acceso administrativo no visible para participantes
-- Panel admin para revisar usuarios, IP, estadísticas, reiniciar tests activos, eliminar cuentas y activar/desactivar "Saltar pregunta"
+- Panel admin para revisar usuarios, IP, estadísticas, reiniciar tests activos, eliminar cuentas, activar/desactivar "Saltar pregunta" y ajustar seguridad de registros
 - UI en español, diseño sobrio sin emojis
 
 ## Despliegue (GitHub + Render + Neon)

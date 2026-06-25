@@ -4,6 +4,7 @@ import { QUESTIONS } from '@rnv24/shared';
 import { getDb } from '../db/index.js';
 import { signToken, authMiddleware, adminMiddleware } from '../middleware/auth.js';
 import { getAppSettings, updateAppSettings } from '../services/settings.js';
+import type { RegistrationMode } from '../services/settings.js';
 import {
   canRegisterFromIp,
   getClientIp,
@@ -24,7 +25,12 @@ router.post('/register', async (req, res) => {
     return;
   }
 
-  const validationError = validateRegistrationInput({ email, name, password });
+  const settings = await getAppSettings();
+  const validationError = validateRegistrationInput({ email, name, password }, {
+    registrationMode: settings.registrationMode,
+    validateSuspiciousNames: settings.validateSuspiciousNames,
+    blockDisposableEmails: settings.blockDisposableEmails,
+  });
   if (validationError) {
     res.status(400).json({ error: validationError });
     return;
@@ -36,13 +42,15 @@ router.post('/register', async (req, res) => {
   if (existing) { res.status(409).json({ error: 'El email ya está registrado' }); return; }
 
   const ip = getClientIp(req);
-  const registerWindow = canRegisterFromIp(ip);
-  if (!registerWindow.allowed) {
-    if (registerWindow.retryAfterSeconds) {
-      res.setHeader('Retry-After', String(registerWindow.retryAfterSeconds));
+  if (settings.limitRegistrationRate) {
+    const registerWindow = canRegisterFromIp(ip);
+    if (!registerWindow.allowed) {
+      if (registerWindow.retryAfterSeconds) {
+        res.setHeader('Retry-After', String(registerWindow.retryAfterSeconds));
+      }
+      res.status(429).json({ error: 'Se alcanzó el límite temporal de creación de cuentas. Intenta más tarde.' });
+      return;
     }
-    res.status(429).json({ error: 'Se alcanzó el límite temporal de creación de cuentas. Intenta más tarde.' });
-    return;
   }
 
   const passwordHash = bcrypt.hashSync(password, 10);
@@ -205,9 +213,13 @@ router.get('/admin/settings', adminMiddleware, async (_req, res) => {
 });
 
 router.put('/admin/settings', adminMiddleware, async (req, res) => {
-  const { allowQuestionSkip } = req.body as { allowQuestionSkip?: unknown };
+  const body = req.body as Record<string, unknown>;
   const settings = await updateAppSettings({
-    allowQuestionSkip: allowQuestionSkip === true,
+    allowQuestionSkip: 'allowQuestionSkip' in body ? body.allowQuestionSkip === true : undefined,
+    registrationMode: typeof body.registrationMode === 'string' ? body.registrationMode as RegistrationMode : undefined,
+    validateSuspiciousNames: 'validateSuspiciousNames' in body ? body.validateSuspiciousNames === true : undefined,
+    blockDisposableEmails: 'blockDisposableEmails' in body ? body.blockDisposableEmails === true : undefined,
+    limitRegistrationRate: 'limitRegistrationRate' in body ? body.limitRegistrationRate === true : undefined,
   });
   res.json({ settings });
 });

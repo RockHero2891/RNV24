@@ -45,6 +45,11 @@ export function AdminPage() {
   const handleSkipToggle = async () => {
     if (!settings || settingsSaving) return;
     const nextSettings = { ...settings, allowQuestionSkip: !settings.allowQuestionSkip };
+    saveSettings(nextSettings);
+  };
+
+  const saveSettings = async (nextSettings: AppSettings) => {
+    if (!settings || settingsSaving) return;
     setSettings(nextSettings);
     setSettingsSaving(true);
     try {
@@ -56,6 +61,11 @@ export function AdminPage() {
     } finally {
       setSettingsSaving(false);
     }
+  };
+
+  const updateSetting = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
+    if (!settings) return;
+    saveSettings({ ...settings, [key]: value });
   };
 
   const handleDelete = async (id: number, name: string) => {
@@ -168,6 +178,72 @@ export function AdminPage() {
               />
               <span className="sr-only">Permitir saltar preguntas</span>
             </button>
+          </div>
+        </section>
+
+        <section className="mb-6 rounded-lg border border-surface-200 bg-white px-5 py-4">
+          <div className="mb-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">Seguridad de registros</p>
+            <h2 className="mt-1 text-base font-bold text-surface-900">Control de acceso para nuevos participantes</h2>
+            <p className="mt-1 max-w-3xl text-sm text-surface-500">
+              Ajusta el nivel de apertura del registro sin cambiar código. La nómina privada se mantiene solo en variables de entorno.
+            </p>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+            <label className="block">
+              <span className="label">Modo de registro</span>
+              <select
+                className="input"
+                value={settings?.registrationMode ?? 'open_strict'}
+                disabled={!settings || settingsSaving}
+                onChange={(e) => updateSetting('registrationMode', e.target.value as AppSettings['registrationMode'])}
+              >
+                <option value="private_roster">Privado por nómina</option>
+                <option value="open_strict">Abierto estricto</option>
+                <option value="open_review">Abierto con revisión suave</option>
+                <option value="open">Libre básico</option>
+              </select>
+              <span className="mt-1 block text-xs text-surface-500">
+                {settings?.hasPrivateRoster
+                  ? 'La nómina privada está configurada en el servidor.'
+                  : 'No hay nómina privada configurada en el servidor.'}
+              </span>
+            </label>
+
+            <div className="space-y-3">
+              {[
+                {
+                  key: 'validateSuspiciousNames' as const,
+                  label: 'Bloquear nombres sospechosos',
+                  description: 'Filtra datos como test, admin, demo o nombres claramente falsos.',
+                },
+                {
+                  key: 'blockDisposableEmails' as const,
+                  label: 'Bloquear correos temporales',
+                  description: 'Rechaza dominios de prueba o correo desechable.',
+                },
+                {
+                  key: 'limitRegistrationRate' as const,
+                  label: 'Limitar creación de cuentas',
+                  description: 'Frena registros masivos sin bloquear login por IP.',
+                },
+              ].map((item) => (
+                <label key={item.key} className="flex items-start justify-between gap-4 rounded-lg border border-surface-200 bg-surface-50 px-4 py-3">
+                  <span>
+                    <span className="block text-sm font-semibold text-surface-800">{item.label}</span>
+                    <span className="block text-xs text-surface-500">{item.description}</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 accent-brand-600"
+                    checked={Boolean(settings?.[item.key])}
+                    disabled={!settings || settingsSaving || settings?.registrationMode === 'open'}
+                    onChange={(e) => updateSetting(item.key, e.target.checked)}
+                  />
+                </label>
+              ))}
+            </div>
           </div>
         </section>
 

@@ -70,6 +70,11 @@ export interface ExamMetadata {
 
 export interface AppSettings {
   allowQuestionSkip: boolean;
+  registrationMode: 'private_roster' | 'open_strict' | 'open_review' | 'open';
+  validateSuspiciousNames: boolean;
+  blockDisposableEmails: boolean;
+  limitRegistrationRate: boolean;
+  hasPrivateRoster: boolean;
 }
 
 export interface ValidationResponse {

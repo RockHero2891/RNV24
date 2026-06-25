@@ -1,4 +1,5 @@
 import type { Request } from 'express';
+import type { RegistrationMode } from './settings.js';
 
 const REGISTER_WINDOW_MS = 15 * 60 * 1000;
 const MAX_REGISTRATIONS_PER_WINDOW = 3;
@@ -234,10 +235,20 @@ export function validateRegistrationInput(input: {
   email: string;
   name: string;
   password: string;
+}, options: {
+  registrationMode: RegistrationMode;
+  validateSuspiciousNames: boolean;
+  blockDisposableEmails: boolean;
 }): string | null {
   const name = input.name.trim().replace(/\s+/g, ' ');
   const normalizedName = normalizeText(name);
   const nameWords = normalizedName.split(/\s+/).filter(Boolean);
+  const shouldBlockSuspiciousNames =
+    options.validateSuspiciousNames &&
+    (options.registrationMode === 'private_roster' || options.registrationMode === 'open_strict');
+  const shouldBlockDisposableEmails =
+    options.blockDisposableEmails && options.registrationMode !== 'open';
+  const shouldUseRoster = options.registrationMode === 'private_roster';
 
   if (name.length < 4 || name.length > 80) {
     return 'Ingresa un nombre real.';
@@ -247,16 +258,20 @@ export function validateRegistrationInput(input: {
     return 'El nombre solo debe contener letras y espacios.';
   }
 
-  if (nameWords.some((word) => RESERVED_NAME_WORDS.has(word))) {
+  if (shouldBlockSuspiciousNames && nameWords.some((word) => RESERVED_NAME_WORDS.has(word))) {
     return 'Ese nombre no está permitido para registrarse.';
   }
 
-  if (/^(.)\1{4,}$/.test(compact(name)) || /(test|prueba|demo|fake|falso)/.test(compact(name))) {
+  if (shouldBlockSuspiciousNames && (/^(.)\1{4,}$/.test(compact(name)) || /(test|prueba|demo|fake|falso)/.test(compact(name)))) {
     return 'Ingresa datos reales para crear la cuenta.';
   }
 
   const allowedNames = getAllowedNames();
-  if (allowedNames.size > 0 && !matchesAllowedRosterName(name, allowedNames)) {
+  if (shouldUseRoster && allowedNames.size === 0) {
+    return 'El registro privado aún no está configurado.';
+  }
+
+  if (shouldUseRoster && !matchesAllowedRosterName(name, allowedNames)) {
     return 'El nombre ingresado no está habilitado para este curso.';
   }
 
@@ -273,11 +288,11 @@ export function validateRegistrationInput(input: {
     return 'Ingresa un email personal válido.';
   }
 
-  if (DISPOSABLE_DOMAINS.has(domain) || RESERVED_EMAIL_DOMAINS.has(domain)) {
+  if (shouldBlockDisposableEmails && (DISPOSABLE_DOMAINS.has(domain) || RESERVED_EMAIL_DOMAINS.has(domain))) {
     return 'No se permiten correos temporales o de prueba para registrarse.';
   }
 
-  if (BLOCKED_EMAIL_LOCALS.has(localCompact) && !TRUSTED_PERSONAL_DOMAINS.has(domain)) {
+  if (shouldBlockSuspiciousNames && BLOCKED_EMAIL_LOCALS.has(localCompact) && !TRUSTED_PERSONAL_DOMAINS.has(domain)) {
     return 'Ingresa un email personal válido.';
   }
 
