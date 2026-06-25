@@ -52,6 +52,7 @@ Copia `.env.example` a `.env` en la raíz del proyecto:
 | `JWT_SECRET` | Sí (prod) | Secreto para tokens de sesión |
 | `DATABASE_PATH` | No | SQLite local (solo si no hay `DATABASE_URL`) |
 | `DATABASE_URL` | Sí (prod) | Connection string Neon PostgreSQL |
+| `ALLOWED_REGISTRATION_NAMES` | No | Nómina privada opcional para habilitar registros por nombre completo |
 | `OPENAI_API_KEY` | No | Reservada para una futura integración de validación IA |
 | `OPENAI_MODEL` | No | Modelo OpenAI reservado para futura integración |
 | `VITE_API_URL` | No | URL del API en producción (vacío = mismo origen) |
@@ -75,7 +76,7 @@ Cada ejercicio de desarrollo tiene un máximo de 10 intentos de verificación.
 - Supervisión simulada: cámara/mic/pantalla (indicadores), detección blur, pantalla completa
 - Editor de código tipo VSCode con resaltado, autocompletado, Tab, indentación automática y copiar/pegar habilitado
 - Máximo 10 intentos de verificación por ejercicio de desarrollo
-- Panel admin oculto tras 5 clics en el número `7` de "7 secciones"
+- Acceso administrativo no visible para participantes
 - Panel admin para revisar usuarios, IP, estadísticas, reiniciar tests activos, eliminar cuentas y activar/desactivar "Saltar pregunta"
 - UI en español, diseño sobrio sin emojis
 

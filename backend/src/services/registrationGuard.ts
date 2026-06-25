@@ -117,6 +117,8 @@ const COMMON_PASSWORDS = new Set([
 ]);
 
 const registrationAttempts = new Map<string, number[]>();
+let allowedNamesCacheKey = '';
+let allowedNamesCache = new Set<string>();
 
 function normalizeText(value: string): string {
   return value
@@ -130,8 +132,75 @@ function compact(value: string): string {
   return normalizeText(value).replace(/[^a-z0-9]/g, '');
 }
 
+function normalizeName(value: string): string {
+  return normalizeText(value).replace(/[^a-z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+}
+
 function getDomain(email: string): string {
   return email.split('@')[1]?.toLowerCase() ?? '';
+}
+
+function getAllowedNames(): Set<string> {
+  const raw = process.env.ALLOWED_REGISTRATION_NAMES?.trim() ?? '';
+  if (raw === allowedNamesCacheKey) return allowedNamesCache;
+
+  allowedNamesCacheKey = raw;
+  allowedNamesCache = new Set(
+    raw
+      .split(/\r?\n|;|\|/)
+      .map(normalizeName)
+      .filter(Boolean)
+  );
+  return allowedNamesCache;
+}
+
+function editDistance(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, () => Array<number>(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i += 1) dp[i][0] = i;
+  for (let j = 0; j <= b.length; j += 1) dp[0][j] = j;
+
+  for (let i = 1; i <= a.length; i += 1) {
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return dp[a.length][b.length];
+}
+
+function tokenMatches(inputToken: string, allowedToken: string): boolean {
+  if (inputToken === allowedToken) return true;
+  if (inputToken.length < 4 || allowedToken.length < 4) return false;
+  const distance = editDistance(inputToken, allowedToken);
+  return distance <= (Math.max(inputToken.length, allowedToken.length) >= 6 ? 2 : 1);
+}
+
+function matchesAllowedRosterName(name: string, allowedNames: Set<string>): boolean {
+  const inputTokens = normalizeName(name).split(' ').filter((token) => token.length >= 3);
+  if (inputTokens.length === 0) return false;
+
+  const exactMatchCounts = [...allowedNames].map((allowedName) => {
+    const allowedTokens = new Set(allowedName.split(' ').filter((token) => token.length >= 3));
+    return inputTokens.filter((inputToken) => allowedTokens.has(inputToken)).length;
+  });
+  const exactFullMatches = exactMatchCounts.filter((count) => count === inputTokens.length);
+  if (exactFullMatches.length === 1) return true;
+
+  const matchCounts = [...allowedNames].map((allowedName) => {
+    const allowedTokens = allowedName.split(' ').filter((token) => token.length >= 3);
+    return inputTokens.filter((inputToken) =>
+      allowedTokens.some((allowedToken) => tokenMatches(inputToken, allowedToken))
+    ).length;
+  });
+
+  const fullMatches = matchCounts.filter((count) => count === inputTokens.length);
+  if (inputTokens.length === 1) return fullMatches.length === 1;
+  return fullMatches.some((count) => count >= 2);
 }
 
 export function getClientIp(req: Request): string {
@@ -170,12 +239,8 @@ export function validateRegistrationInput(input: {
   const normalizedName = normalizeText(name);
   const nameWords = normalizedName.split(/\s+/).filter(Boolean);
 
-  if (name.length < 5 || name.length > 80) {
-    return 'Ingresa tu nombre completo real.';
-  }
-
-  if (nameWords.length < 2) {
-    return 'Ingresa nombre y apellido para crear la cuenta.';
+  if (name.length < 4 || name.length > 80) {
+    return 'Ingresa un nombre real.';
   }
 
   if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ' -]+$/.test(name)) {
@@ -188,6 +253,11 @@ export function validateRegistrationInput(input: {
 
   if (/^(.)\1{4,}$/.test(compact(name)) || /(test|prueba|demo|fake|falso)/.test(compact(name))) {
     return 'Ingresa datos reales para crear la cuenta.';
+  }
+
+  const allowedNames = getAllowedNames();
+  if (allowedNames.size > 0 && !matchesAllowedRosterName(name, allowedNames)) {
+    return 'El nombre ingresado no está habilitado para este curso.';
   }
 
   const email = input.email.trim().toLowerCase();
