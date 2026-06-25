@@ -64,6 +64,16 @@ CREATE TABLE IF NOT EXISTS validation_attempts (
   score INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key VARCHAR(100) PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO app_settings (key, value)
+VALUES ('allow_question_skip', 'false')
+ON CONFLICT (key) DO NOTHING;
 `;
 
 export function createPostgresClient(connectionString: string): DbClient {

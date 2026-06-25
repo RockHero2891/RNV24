@@ -8,6 +8,7 @@ import { QUESTIONS, SECTIONS } from '@rnv24/shared';
 import { initDatabase } from './db/index.js';
 import authRoutes from './routes/auth.js';
 import sessionRoutes from './routes/sessions.js';
+import { getAppSettings } from './services/settings.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -43,11 +44,14 @@ app.get('/version.json', (_req, res) => {
   res.json(readVersionInfo());
 });
 
-app.get('/api/exam/metadata', (_req, res) => {
+app.get('/api/exam/metadata', async (_req, res) => {
+  const settings = await getAppSettings();
+
   res.json({
     title: 'Test RNV24 Certificación - Full Stack Javascript',
     sections: SECTIONS,
     totalQuestions: QUESTIONS.length,
+    settings,
     questions: QUESTIONS.map((q) => ({
       id: q.id,
       sectionId: q.sectionId,

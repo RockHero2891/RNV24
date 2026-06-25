@@ -46,6 +46,7 @@ export interface ExamSession {
 
 export interface ExamMetadata {
   title: string;
+  settings: AppSettings;
   sections: Array<{
     id: number;
     title: string;
@@ -65,6 +66,10 @@ export interface ExamMetadata {
     hints?: string[];
     starterCode?: string;
   }>;
+}
+
+export interface AppSettings {
+  allowQuestionSkip: boolean;
 }
 
 export interface ValidationResponse {
@@ -219,6 +224,15 @@ export const api = {
 
   adminDeleteUser: (id: number) =>
     request<{ ok: boolean }>(`/api/auth/admin/users/${id}`, { method: 'DELETE' }),
+
+  adminGetSettings: () =>
+    request<{ settings: AppSettings }>('/api/auth/admin/settings'),
+
+  adminUpdateSettings: (settings: AppSettings) =>
+    request<{ settings: AppSettings }>('/api/auth/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    }),
 };
 
 export function setAuthToken(token: string | null) {

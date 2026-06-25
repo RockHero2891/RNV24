@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api, type AdminUserStats } from '../services/api';
+import { api, type AdminUserStats, type AppSettings } from '../services/api';
 
 interface AdminUser {
   id: number; name: string; email: string; created_at: string;
@@ -20,6 +20,8 @@ export function AdminPage() {
   const [resetting, setResetting] = useState<number | null>(null);
   const [selectedStats, setSelectedStats] = useState<AdminUserStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [settingsSaving, setSettingsSaving] = useState(false);
 
   const fetchUsers = () => {
     setLoading(true);
@@ -29,7 +31,32 @@ export function AdminPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  const fetchSettings = () => {
+    api.adminGetSettings()
+      .then(({ settings }) => setSettings(settings))
+      .catch(() => setError('No se pudo cargar la configuración del test'));
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchSettings();
+  }, []);
+
+  const handleSkipToggle = async () => {
+    if (!settings || settingsSaving) return;
+    const nextSettings = { ...settings, allowQuestionSkip: !settings.allowQuestionSkip };
+    setSettings(nextSettings);
+    setSettingsSaving(true);
+    try {
+      const { settings: saved } = await api.adminUpdateSettings(nextSettings);
+      setSettings(saved);
+    } catch {
+      setSettings(settings);
+      setError('No se pudo guardar la configuración del test');
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
 
   const handleDelete = async (id: number, name: string) => {
     if (!confirm(`¿Eliminar la cuenta de ${name}? Esta acción no se puede deshacer.`)) return;
@@ -112,6 +139,37 @@ export function AdminPage() {
             </div>
           ))}
         </div>
+
+        <section className="mb-6 rounded-lg border border-surface-200 bg-white px-5 py-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">Configuración del test</p>
+              <h2 className="mt-1 text-base font-bold text-surface-900">Permitir saltar preguntas</h2>
+              <p className="mt-1 max-w-2xl text-sm text-surface-500">
+                Cuando está activo, los participantes pueden avanzar sin responder una pregunta o enunciado.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings?.allowQuestionSkip ?? false}
+              disabled={!settings || settingsSaving}
+              onClick={handleSkipToggle}
+              className={[
+                'relative h-8 w-14 shrink-0 rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+                settings?.allowQuestionSkip ? 'bg-brand-600' : 'bg-surface-300',
+              ].join(' ')}
+            >
+              <span
+                className={[
+                  'absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-transform',
+                  settings?.allowQuestionSkip ? 'translate-x-7' : 'translate-x-1',
+                ].join(' ')}
+              />
+              <span className="sr-only">Permitir saltar preguntas</span>
+            </button>
+          </div>
+        </section>
 
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-surface-900">

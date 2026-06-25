@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { QUESTIONS } from '@rnv24/shared';
 import { getDb } from '../db/index.js';
 import { signToken, authMiddleware, adminMiddleware } from '../middleware/auth.js';
+import { getAppSettings, updateAppSettings } from '../services/settings.js';
 
 const router = Router();
 
@@ -184,6 +185,19 @@ router.post('/admin/users/:id/reset-active', adminMiddleware, async (req, res) =
     [new Date().toISOString(), userId]
   );
   res.json({ ok: true, resetCount: result.changes });
+});
+
+router.get('/admin/settings', adminMiddleware, async (_req, res) => {
+  const settings = await getAppSettings();
+  res.json({ settings });
+});
+
+router.put('/admin/settings', adminMiddleware, async (req, res) => {
+  const { allowQuestionSkip } = req.body as { allowQuestionSkip?: unknown };
+  const settings = await updateAppSettings({
+    allowQuestionSkip: allowQuestionSkip === true,
+  });
+  res.json({ settings });
 });
 
 // ── Admin: borrar usuario ─────────────────────────────────────────────────────

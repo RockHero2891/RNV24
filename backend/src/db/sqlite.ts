@@ -61,6 +61,14 @@ const SQLITE_SCHEMA = `
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (session_id) REFERENCES exam_sessions(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  INSERT OR IGNORE INTO app_settings (key, value) VALUES ('allow_question_skip', 'false');
 `;
 
 export function createSqliteClient(): DbClient {

@@ -142,8 +142,8 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
   const isLastInSection =
     currentSection?.questionIds[currentSection.questionIds.length - 1] === currentQuestionId;
 
-  const handleNext = async () => {
-    if (!questionAnswered) return;
+  const handleAdvance = async (requireAnswered: boolean) => {
+    if (requireAnswered && !questionAnswered) return;
 
     if (isLastQuestion) {
       await api.saveProgress(session.id, {
@@ -180,6 +180,10 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
       },
     });
   };
+
+  const handleNext = () => handleAdvance(true);
+
+  const handleSkip = () => handleAdvance(false);
 
   const handleContinueBreak = () => {
     const nextId = currentQuestionId + 1;
@@ -271,7 +275,7 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
           />
         )}
 
-        <div className="mt-6 flex items-center justify-between">
+        <div className="mt-6 flex items-center justify-between gap-3">
           <button
             type="button"
             className="btn-secondary px-4"
@@ -282,14 +286,25 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
           >
             ← Pausar y salir
           </button>
-          <button
-            type="button"
-            className="btn-success px-6"
-            disabled={!questionAnswered}
-            onClick={handleNext}
-          >
-            {isLastQuestion ? 'Finalizar examen' : 'Siguiente pregunta'}
-          </button>
+          <div className="flex items-center gap-3">
+            {metadata.settings.allowQuestionSkip && !questionAnswered && (
+              <button
+                type="button"
+                className="btn-secondary px-4"
+                onClick={handleSkip}
+              >
+                Saltar pregunta
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn-success px-6"
+              disabled={!questionAnswered}
+              onClick={handleNext}
+            >
+              {isLastQuestion ? 'Finalizar examen' : 'Siguiente pregunta'}
+            </button>
+          </div>
         </div>
       </main>
     </div>
