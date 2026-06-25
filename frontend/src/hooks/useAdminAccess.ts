@@ -1,33 +1,20 @@
-"use client";
-
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export function useAdminAccess() {
   const [clickCount, setClickCount] = useState(0);
-  const [showAdminButton, setShowAdminButton] = useState(false);
 
-  useEffect(() => {
-    const storedCount = localStorage.getItem('rnv24_admin_click_count');
-    if (storedCount) {
-      const count = parseInt(storedCount, 10);
-      setClickCount(count);
-      setShowAdminButton(count >= 5);
-    }
-  }, []);
-
-  const handleSevenClick = () => {
+  const handleSevenClick = (): boolean => {
     const newCount = clickCount + 1;
-    setClickCount(newCount);
-    localStorage.setItem('rnv24_admin_click_count', newCount.toString());
-
     if (newCount >= 5) {
-      setShowAdminButton(true);
+      setClickCount(0);
+      return true;
     }
+    setClickCount(newCount);
+    return false;
   };
 
   return {
     clickCount,
-    showAdminButton,
     handleSevenClick,
   };
 }

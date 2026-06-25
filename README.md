@@ -22,8 +22,8 @@ RNV24/
 ## Instalación y desarrollo local
 
 ```bash
-cd C:\Users\gabri\Projects\RNV24
-cp .env.example .env   # En Windows: copy .env.example .env
+cd C:\Users\gabri\Desktop\RNV24
+copy .env.example .env
 npm install
 npm run dev
 ```
@@ -52,17 +52,16 @@ Copia `.env.example` a `.env` en la raíz del proyecto:
 | `JWT_SECRET` | Sí (prod) | Secreto para tokens de sesión |
 | `DATABASE_PATH` | No | SQLite local (solo si no hay `DATABASE_URL`) |
 | `DATABASE_URL` | Sí (prod) | Connection string Neon PostgreSQL |
-| `OPENAI_API_KEY` | No | Habilita validación IA de código |
-| `OPENAI_MODEL` | No | Modelo OpenAI (default: `gpt-4o-mini`) |
+| `OPENAI_API_KEY` | No | Reservada para una futura integración de validación IA |
+| `OPENAI_MODEL` | No | Modelo OpenAI reservado para futura integración |
 | `VITE_API_URL` | No | URL del API en producción (vacío = mismo origen) |
 
 Ver `.env.example` y [DEPLOYMENT.md](./DEPLOYMENT.md) para despliegue completo.
 
-### Validación de código con IA
+### Validación de código
 
-Sin `OPENAI_API_KEY`, el endpoint `/api/sessions/validate-code` usa validadores heurísticos (regex/estructura) del paquete `shared`.
-
-Con `OPENAI_API_KEY`, se envía el enunciado + código del estudiante a OpenAI y se aceptan soluciones alternativas válidas.
+El endpoint `/api/sessions/validate-code` usa validadores heurísticos (regex/estructura) del paquete `shared`.
+Cada ejercicio de desarrollo tiene un máximo de 10 intentos de verificación.
 
 ## Funcionalidades implementadas
 
@@ -70,11 +69,14 @@ Con `OPENAI_API_KEY`, se envía el enunciado + código del estudiante a OpenAI y
 - Teoría (test) + desarrollo (HTML, JS, SQL)
 - Temporizadores: sesión (15 h), sección y ejercicio de desarrollo
 - Pausas entre secciones con progreso persistente
-- Autenticación email/contraseña
-- Persistencia en SQLite: usuarios, sesiones, respuestas, intentos de validación
+- Autenticación email/contraseña con bcrypt + JWT Bearer
+- Registro protegido con validación de nombre real, aceptación de proveedores personales comunes, bloqueo de correos de prueba/temporales y límite temporal de creación de cuentas
+- Persistencia en SQLite/PostgreSQL: usuarios, sesiones, respuestas, intentos de validación y configuración del test
 - Supervisión simulada: cámara/mic/pantalla (indicadores), detección blur, pantalla completa
-- Bloqueo copiar/pegar en áreas de código
+- Editor de código tipo VSCode con resaltado, autocompletado, Tab, indentación automática y copiar/pegar habilitado
 - Máximo 10 intentos de verificación por ejercicio de desarrollo
+- Panel admin oculto tras 5 clics en el número `7` de "7 secciones"
+- Panel admin para revisar usuarios, IP, estadísticas, reiniciar tests activos, eliminar cuentas y activar/desactivar "Saltar pregunta"
 - UI en español, diseño sobrio sin emojis
 
 ## Despliegue (GitHub + Render + Neon)
@@ -86,7 +88,7 @@ Guía detallada: **[DEPLOYMENT.md](./DEPLOYMENT.md)**
 1. **GitHub:** https://github.com/RockHero2891/RNV24
 2. **Neon:** crear proyecto PostgreSQL, copiar `DATABASE_URL` (pooled, `sslmode=require`)
 3. **Render:** conectar repo, usar `Dockerfile`, configurar variables de entorno
-4. **OpenAI:** opcional, `OPENAI_API_KEY` + `OPENAI_MODEL=gpt-4o-mini`
+4. **JWT:** definir `JWT_SECRET` fuerte en producción
 
 El backend usa **SQLite** en local (sin `DATABASE_URL`) y **PostgreSQL** en producción (con `DATABASE_URL`). El esquema se aplica automáticamente al arrancar.
 
@@ -122,7 +124,7 @@ El frontend lee automáticamente la versión actual desde `version.json` y la mu
 - **version:update:** Actualiza la versión en todos los archivos y reconstruye el proyecto
 - **version:check:** Muestra la versión actual sin realizar cambios
 
-## Preguntas de desarrollo con validación IA
+## Preguntas de desarrollo con validación automática
 
 | ID | Tipo | Tema |
 |----|------|------|

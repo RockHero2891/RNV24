@@ -4,14 +4,14 @@ import { QUESTIONS } from '@rnv24/shared';
 import { getDb } from '../db/index.js';
 import { signToken, authMiddleware, adminMiddleware } from '../middleware/auth.js';
 import { getAppSettings, updateAppSettings } from '../services/settings.js';
+import {
+  canRegisterFromIp,
+  getClientIp,
+  recordRegistrationAttempt,
+  validateRegistrationInput,
+} from '../services/registrationGuard.js';
 
 const router = Router();
-
-function getClientIp(req: import('express').Request): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) return String(forwarded).split(',')[0].trim();
-  return req.socket.remoteAddress ?? 'unknown';
-}
 
 // ── Registro ──────────────────────────────────────────────────────────────────
 router.post('/register', async (req, res) => {
@@ -23,8 +23,10 @@ router.post('/register', async (req, res) => {
     res.status(400).json({ error: 'Email, nombre y contraseña son obligatorios' });
     return;
   }
-  if (password.length < 6) {
-    res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+
+  const validationError = validateRegistrationInput({ email, name, password });
+  if (validationError) {
+    res.status(400).json({ error: validationError });
     return;
   }
 
@@ -33,15 +35,25 @@ router.post('/register', async (req, res) => {
   const existing = await db.get<{ id: number }>('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
   if (existing) { res.status(409).json({ error: 'El email ya está registrado' }); return; }
 
-  const passwordHash = bcrypt.hashSync(password, 10);
   const ip = getClientIp(req);
+  const registerWindow = canRegisterFromIp(ip);
+  if (!registerWindow.allowed) {
+    if (registerWindow.retryAfterSeconds) {
+      res.setHeader('Retry-After', String(registerWindow.retryAfterSeconds));
+    }
+    res.status(429).json({ error: 'Se alcanzó el límite temporal de creación de cuentas. Intenta más tarde.' });
+    return;
+  }
+
+  const passwordHash = bcrypt.hashSync(password, 10);
   const result = await db.run(
     'INSERT INTO users (email, name, password_hash, last_ip) VALUES (?, ?, ?, ?)',
-    [normalizedEmail, name.trim(), passwordHash, ip]
+    [normalizedEmail, name.trim().replace(/\s+/g, ' '), passwordHash, ip]
   );
+  recordRegistrationAttempt(ip);
 
   const token = signToken({ userId: result.lastInsertRowid, email: normalizedEmail, isAdmin: false });
-  res.status(201).json({ token, user: { id: result.lastInsertRowid, email: normalizedEmail, name: name.trim(), isAdmin: false } });
+  res.status(201).json({ token, user: { id: result.lastInsertRowid, email: normalizedEmail, name: name.trim().replace(/\s+/g, ' '), isAdmin: false } });
 });
 
 // ── Login ─────────────────────────────────────────────────────────────────────

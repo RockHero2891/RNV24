@@ -36,7 +36,7 @@ app.get('/api/health', (_req, res) => {
     lastUpdated: versionInfo.lastUpdated,
     timestamp: new Date().toISOString(),
     database: process.env.DATABASE_URL ? 'postgresql' : 'sqlite',
-    aiValidation: Boolean(process.env.OPENAI_API_KEY),
+    codeValidation: 'heuristic',
   });
 });
 

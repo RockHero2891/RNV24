@@ -135,9 +135,7 @@ export function LoginPage() {
                        className="font-bold text-white"
                        aria-label="Contador de secciones"
                        onClick={() => {
-                         const nextCount = adminAccess.clickCount + 1;
-                         adminAccess.handleSevenClick();
-                         if (nextCount >= 5) setShowAdminModal(true);
+                         if (adminAccess.handleSevenClick()) setShowAdminModal(true);
                        }}
                      >
                        {n}
