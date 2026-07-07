@@ -8,6 +8,7 @@ import { MAX_DEV_ATTEMPTS, getQuestionById } from '@rnv24/shared';
 interface QuestionViewProps {
   metadata: ExamMetadata;
   questionId: number;
+  questionNumber: number;
   sessionId: number;
   answered: boolean;
   onAnswered: (isCorrect: boolean, answerText?: string, selectedIndex?: number, attempts?: number) => void;
@@ -82,7 +83,7 @@ function shuffleOptions(options: string[], seed: number) {
   return items;
 }
 
-export function QuestionView({ metadata, questionId, sessionId, answered, onAnswered }: QuestionViewProps) {
+export function QuestionView({ metadata, questionId, questionNumber, sessionId, answered, onAnswered }: QuestionViewProps) {
   const question     = metadata.questions.find((q) => q.id === questionId);
   const fullQuestion = getQuestionById(questionId);
 
@@ -170,7 +171,7 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
             <span className="badge-amber">⏱ {question.devTimeMinutes} min</span>
           )}
         </div>
-        <span className="font-mono text-xs text-surface-400">#{questionId + 1}</span>
+        <span className="font-mono text-xs text-surface-400">#{questionNumber}</span>
       </div>
 
       {/* Enunciado */}

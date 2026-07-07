@@ -986,7 +986,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   // SECCIÓN 8: Refuerzo con preguntas originales recuperadas
   {
     id: 65,
-    sectionId: 8,
+    sectionId: 2,
     type: 'test',
     question: '¿Cuál es el propósito de hacer un "fork" en GitHub?',
     options: [
@@ -1000,7 +1000,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   },
   {
     id: 66,
-    sectionId: 8,
+    sectionId: 6,
     type: 'test',
     question: '¿Qué patrón sigue Express al ejecutar middlewares?',
     options: [
@@ -1014,7 +1014,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   },
   {
     id: 67,
-    sectionId: 8,
+    sectionId: 3,
     type: 'test',
     question: '¿Cuál es el propósito de la palabra clave super en una clase derivada de JavaScript?',
     options: [
@@ -1028,7 +1028,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   },
   {
     id: 68,
-    sectionId: 8,
+    sectionId: 3,
     type: 'test',
     question: 'En JavaScript, ¿cómo se define una clase utilizando la sintaxis moderna de ES6?',
     options: [
@@ -1042,7 +1042,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   },
   {
     id: 69,
-    sectionId: 8,
+    sectionId: 3,
     type: 'test',
     question: '¿Qué se necesita para que un método de instancia acceda correctamente a una propiedad definida en el constructor de una clase?',
     options: [
@@ -1056,7 +1056,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   },
   {
     id: 70,
-    sectionId: 8,
+    sectionId: 3,
     type: 'test',
     question: '¿Qué función cumple el método .finally() en una cadena de promesas?',
     options: [
@@ -1070,7 +1070,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   },
   {
     id: 71,
-    sectionId: 8,
+    sectionId: 2,
     type: 'test',
     question: 'Si deseas deshacer cambios en un archivo modificado y no agregado al staging, ¿qué comando usarías?',
     options: [
@@ -1084,7 +1084,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   },
   {
     id: 72,
-    sectionId: 8,
+    sectionId: 4,
     type: 'test',
     question: '¿Cómo agregar una clave foránea en la tabla Pedidos que relacione id_cliente con Clientes?',
     options: [
@@ -1098,7 +1098,7 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
   },
   {
     id: 73,
-    sectionId: 8,
+    sectionId: 1,
     type: 'html',
     question: `Utilizando HTML y estilos, crea un elemento \`div\` con dimensiones de 300px de ancho por 100px de alto.
 
@@ -1120,7 +1120,7 @@ No hace falta definir la función.`,
   },
   {
     id: 74,
-    sectionId: 8,
+    sectionId: 2,
     type: 'codigo',
     question: `Completa el código para devolver si un auto está disponible según su estado actual.
 
@@ -1149,7 +1149,7 @@ No borres el comentario ni modifiques el resto del código.`,
   },
   {
     id: 75,
-    sectionId: 8,
+    sectionId: 4,
     type: 'sql',
     question: `Escribe una consulta SQL que devuelva los nombres de los 3 productos más vendidos por cantidad total.
 
@@ -1182,28 +1182,28 @@ export const SECTIONS: Section[] = [
     title: 'HTML / CSS',
     subtitle: 'Teoría y práctica',
     timeMinutes: 35,
-    questionIds: [0, 1, 2],
+    questionIds: [0, 1, 2, 73],
   },
   {
     id: 2,
     title: 'JavaScript Básico',
     subtitle: 'Teoría y práctica',
     timeMinutes: 40,
-    questionIds: [3, 4, 5],
+    questionIds: [3, 71, 65, 4, 5, 74],
   },
   {
     id: 3,
     title: 'JavaScript Avanzado',
     subtitle: 'Teoría y práctica',
     timeMinutes: 90,
-    questionIds: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21],
+    questionIds: [6, 68, 69, 7, 67, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 70, 20, 21],
   },
   {
     id: 4,
     title: 'SQL',
     subtitle: 'Teoría y práctica',
     timeMinutes: 60,
-    questionIds: [22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+    questionIds: [22, 23, 24, 72, 25, 26, 27, 28, 29, 75, 30, 31],
   },
   {
     id: 5,
@@ -1217,7 +1217,7 @@ export const SECTIONS: Section[] = [
     title: 'Express / Node.js',
     subtitle: 'Solo teoría',
     timeMinutes: 45,
-    questionIds: [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48],
+    questionIds: [36, 37, 66, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48],
   },
   {
     id: 7,
@@ -1225,13 +1225,6 @@ export const SECTIONS: Section[] = [
     subtitle: 'Solo teoría',
     timeMinutes: 45,
     questionIds: [49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64],
-  },
-  {
-    id: 8,
-    title: 'Refuerzo original',
-    subtitle: 'Preguntas recuperadas desde material de certificación',
-    timeMinutes: 45,
-    questionIds: [65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75],
   },
 ];
 

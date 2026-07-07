@@ -24,6 +24,12 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
   const [onBreak, setOnBreak] = useState(false);
   const [breakSectionId, setBreakSectionId] = useState<number | null>(null);
 
+  const orderedQuestionIds = useMemo(
+    () => metadata.sections.flatMap((section) => section.questionIds),
+    [metadata.sections]
+  );
+  const currentOrderIndex = Math.max(0, orderedQuestionIds.indexOf(currentQuestionId));
+
   const currentQuestion = metadata.questions.find((q) => q.id === currentQuestionId);
   const currentSection = getSectionById(session.currentSectionId);
   const isDev = currentQuestion
@@ -112,8 +118,8 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
   }, [persistTimers]);
 
   const progressPercent = useMemo(
-    () => Math.round(((currentQuestionId + (questionAnswered ? 1 : 0)) / metadata.totalQuestions) * 100),
-    [currentQuestionId, questionAnswered, metadata.totalQuestions]
+    () => Math.round(((currentOrderIndex + (questionAnswered ? 1 : 0)) / metadata.totalQuestions) * 100),
+    [currentOrderIndex, questionAnswered, metadata.totalQuestions]
   );
 
   const handleAnswered = async (
@@ -138,7 +144,8 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
     persistTimers();
   };
 
-  const isLastQuestion = currentQuestionId >= metadata.totalQuestions - 1;
+  const nextQuestionId = orderedQuestionIds[currentOrderIndex + 1];
+  const isLastQuestion = nextQuestionId === undefined;
   const isLastInSection =
     currentSection?.questionIds[currentSection.questionIds.length - 1] === currentQuestionId;
 
@@ -162,7 +169,8 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
       return;
     }
 
-    const nextId = currentQuestionId + 1;
+    const nextId = nextQuestionId;
+    if (nextId === undefined) return;
     const nextQuestion = metadata.questions.find((q) => q.id === nextId);
     const nextSectionId = nextQuestion?.sectionId ?? session.currentSectionId;
 
@@ -186,7 +194,11 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
   const handleSkip = () => handleAdvance(false);
 
   const handleContinueBreak = () => {
-    const nextId = currentQuestionId + 1;
+    const nextId = nextQuestionId;
+    if (nextId === undefined) {
+      navigate('/complete', { state: { sessionId: session.id } });
+      return;
+    }
     const nextQuestion = metadata.questions.find((q) => q.id === nextId);
     const nextSectionId = nextQuestion?.sectionId ?? session.currentSectionId;
 
@@ -246,7 +258,7 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
         sectionRemaining={sectionTimer.remaining}
         devRemaining={isDev ? devTimer.remaining : undefined}
         sectionTitle={`Sección ${session.currentSectionId}: ${currentSection?.title ?? ''}`}
-        questionIndex={currentQuestionId}
+        questionIndex={currentOrderIndex}
         totalQuestions={metadata.totalQuestions}
       />
 
@@ -269,6 +281,7 @@ export function ExamPage({ initialSession, metadata }: ExamPageProps) {
             key={currentQuestion.id}
             metadata={metadata}
             questionId={currentQuestion.id}
+            questionNumber={currentOrderIndex + 1}
             sessionId={session.id}
             answered={questionAnswered}
             onAnswered={handleAnswered}
