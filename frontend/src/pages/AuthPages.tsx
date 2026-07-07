@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { QUESTIONS, SECTIONS } from '@rnv24/shared';
 import { useAuth } from '../context/AuthContext';
 import { api, type UserStats } from '../services/api';
 import { useAdminAccess } from '../hooks/useAdminAccess';
@@ -89,6 +90,8 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const totalQuestions = QUESTIONS.length;
+  const totalSections = SECTIONS.length;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,13 +120,13 @@ export function LoginPage() {
             Prepárate para el<br/>certamen real.
           </h1>
           <p className="mt-5 max-w-sm text-base leading-relaxed text-surface-400">
-            7 secciones · 65 preguntas · temporizadores exactos · verificación de código.
+            {totalSections} secciones · {totalQuestions} preguntas · temporizadores exactos · verificación de código.
             El mismo ambiente del examen oficial.
           </p>
            <div className="mt-10 grid grid-cols-2 gap-4">
              {[
-               { n: '65', label: 'Preguntas' },
-               { n: '7',  label: 'Secciones' },
+               { n: String(totalQuestions), label: 'Preguntas' },
+               { n: String(totalSections),  label: 'Secciones' },
                { n: '15h', label: 'Ventana total' },
                { n: '×10', label: 'Intentos por ejercicio' },
              ].map(({ n, label }) => (
@@ -290,15 +293,14 @@ export function DashboardPage() {
     }
   };
 
-  const sections = [
-    { id: 1, title: 'HTML / CSS',          mins: 35,  q: 3  },
-    { id: 2, title: 'JavaScript Básico',    mins: 40,  q: 3  },
-    { id: 3, title: 'JavaScript Avanzado',  mins: 90,  q: 16 },
-    { id: 4, title: 'SQL',                  mins: 60,  q: 10 },
-    { id: 5, title: 'Modelo ER',            mins: 20,  q: 4  },
-    { id: 6, title: 'Express / Node.js',    mins: 45,  q: 13 },
-    { id: 7, title: 'ORM / REST / JWT',     mins: 45,  q: 16 },
-  ];
+  const sections = SECTIONS.map((section) => ({
+    id: section.id,
+    title: section.title.replace('Modelo Entidad-Relación', 'Modelo ER'),
+    mins: section.timeMinutes,
+    q: section.questionIds.length,
+  }));
+  const totalQuestions = QUESTIONS.length;
+  const totalSections = SECTIONS.length;
 
   return (
     <div className="min-h-screen bg-surface-50">
@@ -348,8 +350,8 @@ export function DashboardPage() {
             {/* Secciones */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
               {[
-                { value: '65', label: 'Preguntas' },
-                { value: '7',  label: 'Secciones' },
+                { value: String(totalQuestions), label: 'Preguntas' },
+                { value: String(totalSections),  label: 'Secciones' },
                 { value: '15 h', label: 'Ventana total' },
                 { value: '×10', label: 'Intentos / ejercicio' },
               ].map(({ value, label }) => (
@@ -534,7 +536,7 @@ export function CompletePage() {
           {passed ? '✓' : '○'}
         </div>
         <h1 className="text-2xl font-bold text-surface-900">Simulacro completado</h1>
-        <p className="mt-2 text-surface-500">Has finalizado las 7 secciones del test RNV24.</p>
+        <p className="mt-2 text-surface-500">Has finalizado las {SECTIONS.length} secciones del test RNV24.</p>
 
         {summary ? (
           <div className="mt-6">
