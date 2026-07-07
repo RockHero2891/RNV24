@@ -158,6 +158,100 @@ export function validateSqlInsert(response: string): ValidationResult {
   return { valid: score >= 3, feedback: checksToFeedback(checks), score, total };
 }
 
+export function validateHtmlModalClose(response: string): ValidationResult {
+  const r = response.toLowerCase();
+  const checks: string[] = [];
+  let score = 0;
+  const total = 6;
+
+  if (r.includes('width:300px') || r.includes('width: 300px')) {
+    score++;
+    checks.push('width:300px presente');
+  } else checks.push('Falta width:300px');
+
+  if (r.includes('height:100px') || r.includes('height: 100px')) {
+    score++;
+    checks.push('height:100px presente');
+  } else checks.push('Falta height:100px');
+
+  if (r.includes('position:relative') || r.includes('position: relative')) {
+    score++;
+    checks.push('Contenedor con position:relative');
+  } else checks.push('Falta position:relative en el contenedor');
+
+  if (r.includes('position:absolute') || r.includes('position: absolute')) {
+    score++;
+    checks.push('Cierre con position:absolute');
+  } else checks.push('Falta position:absolute para ubicar la x');
+
+  if ((r.includes('right:') && r.includes('top:')) || (r.includes('float') && r.includes('right'))) {
+    score++;
+    checks.push('x ubicada arriba a la derecha');
+  } else checks.push('Falta ubicar la x arriba a la derecha');
+
+  if (r.includes('onclick') && r.includes('togglemodal')) {
+    score++;
+    checks.push('onclick ejecuta toggleModal');
+  } else checks.push('Falta onclick="toggleModal()"');
+
+  return { valid: score >= 5, feedback: checksToFeedback(checks), score, total };
+}
+
+export function validateAutoDisponible(response: string): ValidationResult {
+  const r = response.toLowerCase();
+  const checks: string[] = [];
+  let score = 0;
+  const total = 5;
+
+  if (r.includes('switch')) { score++; checks.push('Usa switch'); } else checks.push('Falta switch');
+  if (r.includes('estadoautoconsultado')) {
+    score++;
+    checks.push('Evalúa estadoAutoConsultado');
+  } else checks.push('Falta evaluar estadoAutoConsultado');
+  if (r.includes('case') && r.includes('disponible')) {
+    score++;
+    checks.push('Caso disponible definido');
+  } else checks.push('Falta case disponible');
+  if (r.includes('return true')) {
+    score++;
+    checks.push('Retorna true para disponible');
+  } else checks.push('Falta return true');
+  if (r.includes('return false')) {
+    score++;
+    checks.push('Retorna false para estados no disponibles');
+  } else checks.push('Falta return false');
+
+  return { valid: score >= 4, feedback: checksToFeedback(checks), score, total };
+}
+
+export function validateSqlTopProducts(response: string): ValidationResult {
+  const r = response.toLowerCase();
+  const checks: string[] = [];
+  let score = 0;
+  const total = 6;
+
+  if (r.includes('select') && (r.includes('p.name') || r.includes('name'))) {
+    score++;
+    checks.push('SELECT nombre de producto');
+  } else checks.push('Falta seleccionar nombre de producto');
+  if (r.includes('sum') && r.includes('quantity')) {
+    score++;
+    checks.push('SUM(quantity)');
+  } else checks.push('Falta sumar quantity');
+  if (r.includes('join')) { score++; checks.push('JOIN'); } else checks.push('Falta JOIN');
+  if (r.includes('group by')) { score++; checks.push('GROUP BY'); } else checks.push('Falta GROUP BY');
+  if (r.includes('order by') && r.includes('desc')) {
+    score++;
+    checks.push('ORDER BY DESC');
+  } else checks.push('Falta ORDER BY DESC');
+  if (r.includes('limit 3') || r.includes('fetch first 3')) {
+    score++;
+    checks.push('Limita a 3 productos');
+  } else checks.push('Falta LIMIT 3');
+
+  return { valid: score >= 5, feedback: checksToFeedback(checks), score, total };
+}
+
 const validators: Record<string, (code: string) => ValidationResult> = {
   html_divs: validateHtmlDivs,
   js_analizar_temperaturas: validateAnalizarTemperaturas,
@@ -165,6 +259,9 @@ const validators: Record<string, (code: string) => ValidationResult> = {
   sql_category_sales: validateSqlCategorySales,
   sql_cte_products: validateSqlCte,
   sql_insert_products: validateSqlInsert,
+  html_modal_close: validateHtmlModalClose,
+  js_auto_disponible: validateAutoDisponible,
+  sql_top_products: validateSqlTopProducts,
 };
 
 export function validateByKey(key: string, code: string): ValidationResult | null {

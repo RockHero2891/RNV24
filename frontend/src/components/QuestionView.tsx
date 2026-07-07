@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { ExamMetadata } from '../services/api';
 import { api } from '../services/api';
@@ -54,6 +54,34 @@ function QuestionMarkdown({ children }: { children: string }) {
   );
 }
 
+function seededRandom(seed: number) {
+  let value = seed % 2147483647;
+  if (value <= 0) value += 2147483646;
+  return () => {
+    value = (value * 16807) % 2147483647;
+    return (value - 1) / 2147483646;
+  };
+}
+
+function seedFromParts(...parts: Array<string | number>) {
+  const input = parts.join(':');
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) || 1;
+}
+
+function shuffleOptions(options: string[], seed: number) {
+  const random = seededRandom(seed);
+  const items = options.map((text, originalIndex) => ({ text, originalIndex }));
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
 export function QuestionView({ metadata, questionId, sessionId, answered, onAnswered }: QuestionViewProps) {
   const question     = metadata.questions.find((q) => q.id === questionId);
   const fullQuestion = getQuestionById(questionId);
@@ -76,6 +104,11 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
     setSolution(null);
   }, [question?.id, question?.starterCode]);
 
+  const shuffledOptions = useMemo(
+    () => question?.options ? shuffleOptions(question.options, seedFromParts(sessionId, question.id)) : [],
+    [question?.id, question?.options, sessionId]
+  );
+
   if (!question) return null;
 
   const isDev = question.type !== 'test';
@@ -83,9 +116,11 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
 
   const checkTest = () => {
     if (selected === null || answered || fullQuestion?.correctIndex === undefined) return;
-    const isCorrect  = selected === fullQuestion.correctIndex;
-    const correctOpt = question.options?.[fullQuestion.correctIndex]
-      ? `${String.fromCharCode(65 + fullQuestion.correctIndex)}. ${question.options[fullQuestion.correctIndex]}`
+    const selectedOption = shuffledOptions[selected];
+    const correctDisplayIndex = shuffledOptions.findIndex((opt) => opt.originalIndex === fullQuestion.correctIndex);
+    const isCorrect  = selectedOption?.originalIndex === fullQuestion.correctIndex;
+    const correctOpt = correctDisplayIndex >= 0
+      ? `${String.fromCharCode(65 + correctDisplayIndex)}. ${shuffledOptions[correctDisplayIndex].text}`
       : '';
     setFeedback({
       type: isCorrect ? 'success' : 'error',
@@ -93,7 +128,7 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
         ? '¡Correcto!'
         : `Incorrecto. La respuesta era: ${correctOpt}`,
     });
-    onAnswered(isCorrect, undefined, selected);
+    onAnswered(isCorrect, undefined, selectedOption?.originalIndex ?? selected);
   };
 
   const checkCode = async () => {
@@ -144,10 +179,10 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
       {/* Test */}
       {question.type === 'test' && question.options && (
         <div className="space-y-2">
-          {question.options.map((opt, idx) => {
+          {shuffledOptions.map((opt, idx) => {
             const isSelected = selected === idx;
-            const isCorrect  = answered && fullQuestion?.correctIndex === idx;
-            const isWrong    = answered && selected === idx && fullQuestion?.correctIndex !== idx;
+            const isCorrect  = answered && fullQuestion?.correctIndex === opt.originalIndex;
+            const isWrong    = answered && selected === idx && fullQuestion?.correctIndex !== opt.originalIndex;
             return (
               <button key={idx} type="button" disabled={answered} onClick={() => setSelected(idx)}
                 className={[
@@ -161,7 +196,7 @@ export function QuestionView({ metadata, questionId, sessionId, answered, onAnsw
                 <span className="mr-2.5 mt-0.5 shrink-0 font-bold text-surface-400">
                   {String.fromCharCode(65 + idx)}.
                 </span>
-                <span className="leading-6">{opt}</span>
+                <span className="leading-6">{opt.text}</span>
               </button>
             );
           })}

@@ -78,7 +78,7 @@ Escribe el código HTML + CSS necesario:`,
     type: 'codigo',
     question: `Completa el código para calcular temperatura máxima, mínima y promedio semanal.
 
-Agrega la lógica faltante desde el comentario indicado:`,
+Agrega la lógica faltante desde el comentario indicado. No borres el comentario inicial:`,
     starterCode: `function analizarTemperaturas(temperaturas) {
     if (temperaturas.length === 0) {
         return { promedio: null, maxima: null, minima: null };
@@ -87,10 +87,11 @@ Agrega la lógica faltante desde el comentario indicado:`,
     let suma = 0;
     let minima = temperaturas[0];
     let maxima = temperaturas[0];
+    let promedio = 0;
 
     for (let temp of temperaturas) {
         suma += temp;
-        // ESCRIBE TU CODIGO A PARTIR DE AQUI
+        // ESCRIBE TU CODIGO A PARTIR DE AQUI. NO BORRES ESTE COMENTARIO.
 
     }
 
@@ -98,11 +99,11 @@ Agrega la lógica faltante desde el comentario indicado:`,
 }`,
     solution: `if (temp < minima) minima = temp;
 if (temp > maxima) maxima = temp;
-let promedio = suma / temperaturas.length;`,
+promedio = suma / temperaturas.length;`,
     hints: [
       'Dentro del bucle: if (temp < minima) minima = temp;',
       'if (temp > maxima) maxima = temp;',
-      'let promedio = suma / temperaturas.length;',
+      'promedio = suma / temperaturas.length;',
     ],
     devTimeMinutes: 18,
     validationKey: 'js_analizar_temperaturas',
@@ -302,7 +303,7 @@ let promedio = suma / temperaturas.length;`,
     type: 'codigo',
     question: `Completa el código para calcular el producto más vendido.
 
-Agrega la lógica faltante dentro del segundo \`for\`:`,
+Agrega la lógica faltante dentro del segundo \`for\`. No borres el comentario inicial:`,
     starterCode: `function procesarPedidos(pedidos) {
     if (pedidos.length === 0) {
         return { totalVentas: 0, productoMasVendido: null };
@@ -310,11 +311,20 @@ Agrega la lógica faltante dentro del segundo \`for\`:`,
 
     let totalVentas = 0;
     const conteoProductos = {};
+    let productoMasVendido = null;
 
     for (const pedido of pedidos) {
         for (const producto of pedido.productos) {
-            // COMIENZA A ESCRIBIR TU CODIGO AQUI
+            // COMIENZA A ESCRIBIR TU CODIGO AQUI. NO BORRES ESTE COMENTARIO.
 
+        }
+    }
+
+    let mayorCantidad = 0;
+    for (const nombre in conteoProductos) {
+        if (conteoProductos[nombre] > mayorCantidad) {
+            mayorCantidad = conteoProductos[nombre];
+            productoMasVendido = nombre;
         }
     }
 
@@ -972,6 +982,198 @@ VALUES (1, 'Laptop', 1200.00), (2, 'Mouse', 25.00);`,
     ],
     correctIndex: 1,
   },
+
+  // SECCIÓN 8: Refuerzo con preguntas originales recuperadas
+  {
+    id: 65,
+    sectionId: 8,
+    type: 'test',
+    question: '¿Cuál es el propósito de hacer un "fork" en GitHub?',
+    options: [
+      'Crear un backup en la nube.',
+      'Fusionar automáticamente el código de diferentes repositorios.',
+      'Realizar un commit global.',
+      'Eliminar un repositorio clonado.',
+      'Crear una copia personal del repositorio para proponer cambios sin afectar al original.',
+    ],
+    correctIndex: 4,
+  },
+  {
+    id: 66,
+    sectionId: 8,
+    type: 'test',
+    question: '¿Qué patrón sigue Express al ejecutar middlewares?',
+    options: [
+      'Factory pattern',
+      'Cadena de responsabilidad',
+      'Modelo-Vista-Controlador (MVC)',
+      'Patrón Observer',
+      'Decorador',
+    ],
+    correctIndex: 1,
+  },
+  {
+    id: 67,
+    sectionId: 8,
+    type: 'test',
+    question: '¿Cuál es el propósito de la palabra clave super en una clase derivada de JavaScript?',
+    options: [
+      'Acceder a métodos privados de la clase padre.',
+      'Llamar al constructor de la clase base y acceder a sus métodos y propiedades.',
+      'Reemplazar el this dentro de una subclase.',
+      'Crear una nueva instancia de la clase base.',
+      'Definir métodos estáticos dentro de una clase.',
+    ],
+    correctIndex: 1,
+  },
+  {
+    id: 68,
+    sectionId: 8,
+    type: 'test',
+    question: 'En JavaScript, ¿cómo se define una clase utilizando la sintaxis moderna de ES6?',
+    options: [
+      'function MiClase() {}',
+      'const MiClase = new Class() {}',
+      'let MiClase = class {}',
+      'define Class MiClase {}',
+      'class MiClase {}',
+    ],
+    correctIndex: 4,
+  },
+  {
+    id: 69,
+    sectionId: 8,
+    type: 'test',
+    question: '¿Qué se necesita para que un método de instancia acceda correctamente a una propiedad definida en el constructor de una clase?',
+    options: [
+      'Debe crear una función anónima en lugar de un método.',
+      'Debe declarar la propiedad como static.',
+      'Debe extender otra clase que defina la propiedad.',
+      'Debe usar this para referirse a la propiedad.',
+      'Debe inicializar la propiedad fuera de la clase.',
+    ],
+    correctIndex: 3,
+  },
+  {
+    id: 70,
+    sectionId: 8,
+    type: 'test',
+    question: '¿Qué función cumple el método .finally() en una cadena de promesas?',
+    options: [
+      'Captura errores que no se manejaron con .catch().',
+      'Se ejecuta solo si la promesa fue resuelta con éxito.',
+      'Evita que se propague cualquier error posterior.',
+      'Se ejecuta siempre, independientemente del resultado de la promesa.',
+      'Finaliza la ejecución de la promesa de forma forzada.',
+    ],
+    correctIndex: 3,
+  },
+  {
+    id: 71,
+    sectionId: 8,
+    type: 'test',
+    question: 'Si deseas deshacer cambios en un archivo modificado y no agregado al staging, ¿qué comando usarías?',
+    options: [
+      'git undo archivo',
+      'git revert archivo',
+      'git remove archivo',
+      'git checkout -- archivo',
+      'git reset archivo',
+    ],
+    correctIndex: 3,
+  },
+  {
+    id: 72,
+    sectionId: 8,
+    type: 'test',
+    question: '¿Cómo agregar una clave foránea en la tabla Pedidos que relacione id_cliente con Clientes?',
+    options: [
+      'ALTER TABLE Pedidos FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente);',
+      'DEFINE FOREIGN KEY id_cliente ON Pedidos REFERENCES Clientes(id_cliente);',
+      'MODIFY TABLE Pedidos ADD FOREIGN KEY id_cliente REFERENCES Clientes(id_cliente);',
+      'ALTER TABLE Pedidos ADD CONSTRAINT fk_cliente FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente);',
+      'CREATE FOREIGN KEY ON Pedidos (id_cliente) REFERENCES Clientes(id_cliente);',
+    ],
+    correctIndex: 3,
+  },
+  {
+    id: 73,
+    sectionId: 8,
+    type: 'html',
+    question: `Utilizando HTML y estilos, crea un elemento \`div\` con dimensiones de 300px de ancho por 100px de alto.
+
+En la esquina superior derecha debe incluir una "x" que, al hacer clic, ejecute la función \`toggleModal\`.
+
+No hace falta definir la función.`,
+    starterCode: '',
+    solution: `<div style="width:300px; height:100px; position:relative; border:1px solid #333;">
+    <span onclick="toggleModal()" style="position:absolute; top:4px; right:8px; cursor:pointer;">x</span>
+</div>`,
+    hints: [
+      'El div principal debe medir 300px de ancho y 100px de alto.',
+      'Usa position:relative en el contenedor y position:absolute en la x.',
+      'La x debe ejecutar toggleModal() con onclick.',
+    ],
+    preview: true,
+    devTimeMinutes: 15,
+    validationKey: 'html_modal_close',
+  },
+  {
+    id: 74,
+    sectionId: 8,
+    type: 'codigo',
+    question: `Completa el código para devolver si un auto está disponible según su estado actual.
+
+Debes utilizar un \`switch\`. Escribe tu código a partir del comentario indicado dentro de la función.
+
+No borres el comentario ni modifiques el resto del código.`,
+    starterCode: `function estaDisponible(estadoAutoConsultado) {
+    // ESCRIBE TU CODIGO A PARTIR DE AQUI. NO BORRES ESTE COMENTARIO.
+
+}`,
+    solution: `switch (estadoAutoConsultado) {
+    case 'disponible':
+        return true;
+    case 'no disponible':
+        return false;
+    default:
+        return false;
+}`,
+    hints: [
+      'Usa switch (estadoAutoConsultado).',
+      'El caso disponible debe retornar true.',
+      'Los otros casos pueden retornar false.',
+    ],
+    devTimeMinutes: 15,
+    validationKey: 'js_auto_disponible',
+  },
+  {
+    id: 75,
+    sectionId: 8,
+    type: 'sql',
+    question: `Escribe una consulta SQL que devuelva los nombres de los 3 productos más vendidos por cantidad total.
+
+El resultado debe mostrar solo el nombre del producto y la cantidad total vendida, ordenado de mayor a menor.
+
+Tablas disponibles:
+
+- \`products\`: \`id\`, \`name\`, \`category\`
+- \`order_items\`: \`id\`, \`order_id\`, \`product_id\`, \`quantity\``,
+    starterCode: '',
+    solution: `SELECT p.name, SUM(oi.quantity) AS total_vendido
+FROM products p
+JOIN order_items oi ON p.id = oi.product_id
+GROUP BY p.name
+ORDER BY total_vendido DESC
+LIMIT 3;`,
+    hints: [
+      'SELECT p.name, SUM(oi.quantity) AS total_vendido',
+      'JOIN order_items oi ON p.id = oi.product_id',
+      'GROUP BY p.name ORDER BY total_vendido DESC LIMIT 3',
+    ],
+    devTimeMinutes: 20,
+    validationKey: 'sql_top_products',
+  },
 ];
 
 export const SECTIONS: Section[] = [
@@ -1023,6 +1225,13 @@ export const SECTIONS: Section[] = [
     subtitle: 'Solo teoría',
     timeMinutes: 45,
     questionIds: [49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64],
+  },
+  {
+    id: 8,
+    title: 'Refuerzo original',
+    subtitle: 'Preguntas recuperadas desde material de certificación',
+    timeMinutes: 45,
+    questionIds: [65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75],
   },
 ];
 
